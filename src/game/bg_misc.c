@@ -1163,7 +1163,9 @@ static const classAttributes_t bg_classList[ ] =
     100,                                            //int     health;
     1.0f,                                           //float   fallDamage;
     0.0f,                                           //float   regenRate;
-    SCA_TAKESFALLDAMAGE|SCA_CANUSELADDERS,          //int     abilities;
+    SCA_TAKESFALLDAMAGE
+        |SCA_CANUSELADDERS
+        |SCA_STAMINA,                               //int     abilities;
     WP_NONE, //special-cased in g_client.c          //weapon_t  startWeapon
     110.0f,                                         //float   buildDist;
     90,                                             //int     fov;
@@ -1189,8 +1191,9 @@ static const classAttributes_t bg_classList[ ] =
     100,                                            //int     health;
     1.0f,                                           //float   fallDamage;
     0.0f,                                           //float   regenRate;
-    SCA_TAKESFALLDAMAGE|
-      SCA_CANUSELADDERS,                            //int     abilities;
+    SCA_TAKESFALLDAMAGE
+        |SCA_CANUSELADDERS
+        |SCA_STAMINA,                               //int     abilities;
     WP_NONE, //special-cased in g_client.c          //weapon_t  startWeapon
     110.0f,                                         //float   buildDist;
     90,                                             //int     fov;

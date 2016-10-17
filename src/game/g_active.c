@@ -591,19 +591,19 @@ void ClientTimerActions( gentity_t *ent, int msec )
     client->time100 -= 100;
 
     // Restore or subtract stamina
-    if( stopped || client->ps.pm_type == PM_JETPACK )
-      client->ps.stats[ STAT_STAMINA ] += STAMINA_STOP_RESTORE;
+    if( stopped )
+        client->ps.stats[ STAT_STAMINA ] += STAMINA_STOP_RESTORE;
     else if( ( client->ps.stats[ STAT_STATE ] & SS_SPEEDBOOST ) &&
-             !( client->buttons & BUTTON_WALKING ) ) // walk overrides sprint
-      client->ps.stats[ STAT_STAMINA ] -= STAMINA_SPRINT_TAKE;
+            !( client->buttons & BUTTON_WALKING ) ) // walk overrides sprint
+        client->ps.stats[ STAT_STAMINA ] -= STAMINA_SPRINT_TAKE;
     else if( walking || crouched )
-      client->ps.stats[ STAT_STAMINA ] += STAMINA_WALK_RESTORE;
-      
+        client->ps.stats[ STAT_STAMINA ] += STAMINA_WALK_RESTORE;
+
     // Check stamina limits
     if( client->ps.stats[ STAT_STAMINA ] > STAMINA_MAX )
-      client->ps.stats[ STAT_STAMINA ] = STAMINA_MAX;
+        client->ps.stats[ STAT_STAMINA ] = STAMINA_MAX;
     else if( client->ps.stats[ STAT_STAMINA ] < -STAMINA_MAX )
-      client->ps.stats[ STAT_STAMINA ] = -STAMINA_MAX;
+        client->ps.stats[ STAT_STAMINA ] = -STAMINA_MAX;
 
     if( weapon == WP_ABUILD || weapon == WP_ABUILD2 ||
         client->ps.stats[ STAT_WEAPON ] == WP_HBUILD )
