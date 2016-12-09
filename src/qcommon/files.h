@@ -35,7 +35,7 @@ extern "C" {
 
 #define MAX_FILE_HANDLES 64
 
-#define BASEGAME        "gpp"
+#define BASEGAME        "tremulous"
 
 #ifdef DEDICATED
 #define Q3CONFIG_CFG "autogen_server.cfg"

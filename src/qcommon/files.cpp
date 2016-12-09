@@ -3330,6 +3330,31 @@ static void FS_ReorderPurePaks(void)
     }
 }
 
+static void add_to_all_lists(const char* game)
+{
+    // add search path elements in reverse priority order
+    if (fs_basepath->string[0])
+    {
+        FS_AddGameDirectory(fs_basepath->string, game);
+    }
+
+#ifdef __APPLE__
+    // Make MacOSX also include the base path included with the .app bundle
+    fs_apppath = Cvar_Get("fs_apppath", Sys_DefaultAppPath(), CVAR_INIT | CVAR_PROTECTED);
+    if (fs_apppath->string[0])
+    {
+        FS_AddGameDirectory(fs_apppath->string, game);
+    }
+#endif
+
+    // NOTE: same filtering below for mods and basegame
+    if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string))
+    {
+        FS_CreatePath(fs_homepath->string);
+        FS_AddGameDirectory(fs_homepath->string, game);
+    }
+}
+
 /*
 ================
 FS_Startup
@@ -3352,27 +3377,8 @@ static void FS_Startup(const char *gameName)
     fs_homepath = Cvar_Get("fs_homepath", homePath, CVAR_INIT | CVAR_PROTECTED);
     fs_gamedirvar = Cvar_Get("fs_game", BASEGAME, CVAR_INIT | CVAR_SYSTEMINFO);
 
-    // add search path elements in reverse priority order
-    if (fs_basepath->string[0])
-    {
-        FS_AddGameDirectory(fs_basepath->string, "base");
-    }
-
-#ifdef __APPLE__
-    // Make MacOSX also include the base path included with the .app bundle
-    fs_apppath = Cvar_Get("fs_apppath", Sys_DefaultAppPath(), CVAR_INIT | CVAR_PROTECTED);
-    if (fs_apppath->string[0])
-    {
-        FS_AddGameDirectory(fs_apppath->string, "base");
-    }
-#endif
-
-    // NOTE: same filtering below for mods and basegame
-    if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string))
-    {
-        FS_CreatePath(fs_homepath->string);
-        FS_AddGameDirectory(fs_homepath->string, "base");
-    }
+   add_to_all_lists("base");
+   add_to_all_lists("gpp");
 
     // check for additional base game so mods can be based upon other mods
     if (fs_basegame->string[0] && Q_stricmp(fs_basegame->string, gameName))
