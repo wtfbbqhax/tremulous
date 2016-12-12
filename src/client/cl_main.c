@@ -3825,7 +3825,7 @@ void CL_Init( void ) {
 
 	cl_lanForcePackets = Cvar_Get ("cl_lanForcePackets", "1", CVAR_ARCHIVE);
 
-	cl_guidServerUniq = Cvar_Get ("cl_guidServerUniq", "1", CVAR_ARCHIVE);
+	cl_guidServerUniq = Cvar_Get("cl_guidServerUniq", "1", CVAR_ARCHIVE|CVAR_PROTECTED);
 
 	cl_rsaAuth = Cvar_Get ("cl_rsaAuth", "1", CVAR_INIT | CVAR_PROTECTED);
 
