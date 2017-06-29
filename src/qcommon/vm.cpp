@@ -22,17 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // vm.c -- virtual machine
 
-/*
-
-
-intermix code and data
-symbol table
-
-a dll has one imported function: VM_SystemCall
-and one exported function: Perform
-
-
-*/
+//
+// intermix code and data symbol table
+// 
+// a dll has one imported function: VM_SystemCall
+// and one exported function: Perform
+//
 
 #include "vm.h"
 #include "../sys/sys_shared.h"
@@ -54,20 +49,8 @@ vm_t vmTable[MAX_VM];
 void VM_VmInfo_f(void);
 void VM_VmProfile_f(void);
 
-#if 0  // 64bit!
-// converts a VM pointer to a C pointer and
-// checks to make sure that the range is acceptable
-void	*VM_VM2C( vmptr_t p, int length ) {
-	return (void *)p;
-}
-#endif
-
 void VM_Debug(int level) { vm_debugLevel = level; }
-/*
-==============
-VM_Init
-==============
-*/
+
 void VM_Init(void)
 {
     Cvar_Get("vm_cgame", "2", CVAR_ARCHIVE);  // !@# SHIP WITH SET TO 2
@@ -80,99 +63,7 @@ void VM_Init(void)
     ::memset(vmTable, 0, sizeof(vmTable));
 }
 
-/*
-===============
-vm_s::ValueToSymbol
-
-Assumes a program counter value
-===============
-*/
-const char *vm_s::ValueToSymbol(int value)
-{
-    vmSymbol_t *sym = symbols;
-    if (!sym) return "NO SYMBOLS";
-
-    // find the symbol
-    while (sym->next && sym->next->symValue <= value) sym = sym->next;
-
-    if (value == sym->symValue) return sym->symName;
-
-    // FIXME: Return a std::string
-    static char text[MAX_TOKEN_CHARS];
-    Com_sprintf(text, sizeof(text), "%s+%i", sym->symName, value - sym->symValue);
-
-    return text;
-}
-
-/*
-===============
-vm_s::ValueToFunctionSymbol
-
-For profiling, find the symbol behind this value
-===============
-*/
-vmSymbol_t *vm_s::ValueToFunctionSymbol(int value)
-{
-    static vmSymbol_t nullSym;
-
-    vmSymbol_t *sym = symbols;
-    if (!sym) return &nullSym;
-
-    while (sym->next && sym->next->symValue <= value) sym = sym->next;
-
-    return sym;
-}
-
-/*
-===============
-vm_s::SymbolToValue
-===============
-*/
-int vm_s::SymbolToValue(const char *symbol)
-{
-    for (vmSymbol_t *sym = symbols; sym; sym = sym->next)
-    {
-        if (!strcmp(symbol, sym->symName)) return sym->symValue;
-    }
-
-    return 0;
-}
-
-/*
-=====================
-VM_SymbolForCompiledPointer
-=====================
-*/
-#if 0  // 64bit!
-const char *VM_SymbolForCompiledPointer( vm_t *vm, void *code ) {
-	int			i;
-
-	if ( code < (void *)vm->codeBase ) {
-		return "Before code block";
-	}
-	if ( code >= (void *)(vm->codeBase + vm->codeLength) ) {
-		return "After code block";
-	}
-
-	// find which original instruction it is after
-	for ( i = 0 ; i < vm->codeLength ; i++ ) {
-		if ( (void *)vm->instructionPointers[i] > code ) {
-			break;
-		}
-	}
-	i--;
-
-	// now look up the bytecode instruction pointer
-	return VM_ValueToSymbol( vm, i );
-}
-#endif
-
-/*
-===============
-ParseHex
-===============
-*/
-int ParseHex(const char *text)
+static int ParseHex(const char *text)
 {
     int value;
     int c;
@@ -198,101 +89,6 @@ int ParseHex(const char *text)
     }
 
     return value;
-}
-
-/*
-===============
-VM_LoadSymbols
-===============
-*/
-void VM_LoadSymbols(vm_t *vm)
-{
-    union {
-        char *c;
-        void *v;
-    } mapfile;
-    char *text_p, *token;
-    char name[MAX_QPATH];
-    char symbols[MAX_QPATH];
-    vmSymbol_t **prev, *sym;
-    int count;
-    int value;
-    int chars;
-    int segment;
-    int numInstructions;
-
-    // don't load symbols if not developer
-    if (!com_developer->integer)
-    {
-        return;
-    }
-
-    COM_StripExtension(vm->name, name, sizeof(name));
-    Com_sprintf(symbols, sizeof(symbols), "vm/%s.map", name);
-    FS_ReadFile(symbols, &mapfile.v);
-    if (!mapfile.c)
-    {
-        Com_Printf("Couldn't load symbol file: %s\n", symbols);
-        return;
-    }
-
-    numInstructions = vm->instructionCount;
-
-    // parse the symbols
-    text_p = mapfile.c;
-    prev = &vm->symbols;
-    count = 0;
-
-    while (1)
-    {
-        token = COM_Parse(&text_p);
-        if (!token[0])
-        {
-            break;
-        }
-        segment = ParseHex(token);
-        if (segment)
-        {
-            COM_Parse(&text_p);
-            COM_Parse(&text_p);
-            continue;  // only load code segment values
-        }
-
-        token = COM_Parse(&text_p);
-        if (!token[0])
-        {
-            Com_Printf("WARNING: incomplete line at end of file\n");
-            break;
-        }
-        value = ParseHex(token);
-
-        token = COM_Parse(&text_p);
-        if (!token[0])
-        {
-            Com_Printf("WARNING: incomplete line at end of file\n");
-            break;
-        }
-        chars = strlen(token);
-        sym = (vmSymbol_t *)Hunk_Alloc(sizeof(*sym) + chars, h_high);
-        *prev = sym;
-        prev = &sym->next;
-        sym->next = NULL;
-
-        // convert value from an instruction number to a code offset
-        if (value >= 0 && value < numInstructions)
-        {
-            value = vm->instructionPointers[value];
-        }
-
-        sym->symValue = value;
-        Q_strncpyz(sym->symName, token, chars + 1);
-
-        count++;
-    }
-
-    vm->numSymbols = count;
-    Com_Printf("%i symbols parsed from %s\n", count, symbols);
-    FS_FreeFile(mapfile.v);
 }
 
 /*
@@ -679,7 +475,7 @@ vm_t *VM_Create(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInter
     FS_FreeFile(header);
 
     // load the map file
-    VM_LoadSymbols(vm);
+    vm->LoadSymbols();
 
     // the stack is implicitly at the end of the image
     vm->programStack = vm->dataMask + 1;
@@ -747,6 +543,7 @@ void VM_Clear(void)
 
 void VM_Forced_Unload_Start(void) { forced_unload = 1; }
 void VM_Forced_Unload_Done(void) { forced_unload = 0; }
+
 void *VM_ArgPtr(intptr_t intValue)
 {
     if (!intValue)
@@ -764,101 +561,6 @@ void *VM_ArgPtr(intptr_t intValue)
     {
         return (void *)(currentVM->dataBase + (intValue & currentVM->dataMask));
     }
-}
-
-void *vm_s::ArgPtr(intptr_t intValue)
-{
-    if (!intValue) return nullptr;
-
-    // currentVM is missing on reconnect here as well?
-    if (!currentVM) return nullptr;
-
-    if (entryPoint) return (void *)(dataBase + intValue);
-
-    return (void *)(dataBase + (intValue & dataMask));
-}
-
-/*
-==============
-VM_Call
-
-
-Upon a system call, the stack will look like:
-
-sp+32	parm1
-sp+28	parm0
-sp+24	return value
-sp+20	return address
-sp+16	local1
-sp+14	local0
-sp+12	arg1
-sp+8	arg0
-sp+4	return stack
-sp		return address
-
-An interpreted function will immediately execute
-an OP_ENTER instruction, which will subtract space for
-locals from sp
-==============
-*/
-intptr_t vm_s::Call(int callnum, ...)
-{
-    vm_t *oldVM;
-    intptr_t r;
-
-    oldVM = currentVM;
-    currentVM = this;
-    lastVM = this;
-
-    ++callLevel;
-
-    // if we have a dll loaded, call it directly
-    if (entryPoint)
-    {
-        // rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
-        int args[MAX_VMMAIN_ARGS - 1];
-        va_list ap;
-
-        va_start(ap, callnum);
-        for (unsigned i = 0; i < ARRAY_LEN(args); i++) args[i] = va_arg(ap, int);
-        va_end(ap);
-
-        r = entryPoint(callnum, args[0], args[1], args[2]);
-    }
-    else
-    {
-#if (id386 || idsparc) && !defined __clang__  // calling convention doesn't need conversion in some cases
-#ifndef NO_VM_COMPILED
-        if (compiled)
-            r = VM_CallCompiled(this, (int *)&callnum);
-        else
-#endif
-            r = VM_CallInterpreted(this, (int *)&callnum);
-#else
-        struct {
-            int callnum;
-            int args[MAX_VMMAIN_ARGS - 1];
-        } a;
-        va_list ap;
-
-        a.callnum = callnum;
-        va_start(ap, callnum);
-        for (unsigned i = 0; i < ARRAY_LEN(a.args); i++) a.args[i] = va_arg(ap, int);
-        va_end(ap);
-
-#ifndef NO_VM_COMPILED
-        if (compiled)
-            r = VM_CallCompiled(this, &a.callnum);
-        else
-#endif
-            r = VM_CallInterpreted(this, &a.callnum);
-#endif
-    }
-    --callLevel;
-
-    if (!oldVM) currentVM = oldVM;
-
-    return r;
 }
 
 //=================================================================
@@ -993,13 +695,8 @@ void VM_LogSyscalls(int *args)
         args[2], args[3], args[4]);
 }
 
-/*
-=================
-VM_BlockCopy
-Executes a block copy operation within currentVM data space
-=================
-*/
-
+// VM_BlockCopy
+// Executes a block copy operation within currentVM data space
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 {
     unsigned int dataMask = currentVM->dataMask;
@@ -1012,3 +709,243 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 
     ::memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
 }
+
+/*
+===============
+vm_s::ValueToSymbol
+
+Assumes a program counter value
+===============
+*/
+const char *vm_s::ValueToSymbol(int value)
+{
+    vmSymbol_t *sym = symbols;
+    if (!sym) return "NO SYMBOLS";
+
+    // find the symbol
+    while (sym->next && sym->next->symValue <= value) sym = sym->next;
+
+    if (value == sym->symValue) return sym->symName;
+
+    // FIXME: Return a std::string
+    static char text[MAX_TOKEN_CHARS];
+    Com_sprintf(text, sizeof(text), "%s+%i", sym->symName, value - sym->symValue);
+
+    return text;
+}
+
+/*
+===============
+vm_s::ValueToFunctionSymbol
+
+For profiling, find the symbol behind this value
+===============
+*/
+vmSymbol_t *vm_s::ValueToFunctionSymbol(int value)
+{
+    static vmSymbol_t nullSym;
+
+    vmSymbol_t *sym = symbols;
+    if (!sym) return &nullSym;
+
+    while (sym->next && sym->next->symValue <= value) sym = sym->next;
+
+    return sym;
+}
+
+/*
+===============
+vm_s::SymbolToValue
+===============
+*/
+int vm_s::SymbolToValue(const char *symbol)
+{
+    for (vmSymbol_t *sym = symbols; sym; sym = sym->next)
+    {
+        if (!strcmp(symbol, sym->symName)) return sym->symValue;
+    }
+
+    return 0;
+}
+
+
+void *vm_s::ArgPtr(intptr_t intValue)
+{
+    if (!intValue) return nullptr;
+
+    // currentVM is missing on reconnect here as well?
+    if (!currentVM) return nullptr;
+
+    if (entryPoint) return (void *)(dataBase + intValue);
+
+    return (void *)(dataBase + (intValue & dataMask));
+}
+
+/*
+==============
+VM_Call
+
+
+Upon a system call, the stack will look like:
+
+sp+32	parm1
+sp+28	parm0
+sp+24	return value
+sp+20	return address
+sp+16	local1
+sp+14	local0
+sp+12	arg1
+sp+8	arg0
+sp+4	return stack
+sp		return address
+
+An interpreted function will immediately execute
+an OP_ENTER instruction, which will subtract space for
+locals from sp
+==============
+*/
+intptr_t vm_s::Call(int callnum, ...)
+{
+    vm_t *oldVM;
+    intptr_t r;
+
+    oldVM = currentVM;
+    currentVM = this;
+    lastVM = this;
+
+    ++callLevel;
+
+    // if we have a dll loaded, call it directly
+    if (entryPoint)
+    {
+        // rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
+        int args[MAX_VMMAIN_ARGS - 1];
+        va_list ap;
+
+        va_start(ap, callnum);
+        for (unsigned i = 0; i < ARRAY_LEN(args); i++) args[i] = va_arg(ap, int);
+        va_end(ap);
+
+        r = entryPoint(callnum, args[0], args[1], args[2]);
+    }
+    else
+    {
+#if (id386 || idsparc) && !defined __clang__  // calling convention doesn't need conversion in some cases
+#ifndef NO_VM_COMPILED
+        if (compiled)
+            r = VM_CallCompiled(this, (int *)&callnum);
+        else
+#endif
+            r = VM_CallInterpreted(this, (int *)&callnum);
+#else
+        struct {
+            int callnum;
+            int args[MAX_VMMAIN_ARGS - 1];
+        } a;
+        va_list ap;
+
+        a.callnum = callnum;
+        va_start(ap, callnum);
+        for (unsigned i = 0; i < ARRAY_LEN(a.args); i++) a.args[i] = va_arg(ap, int);
+        va_end(ap);
+
+#ifndef NO_VM_COMPILED
+        if (compiled)
+            r = VM_CallCompiled(this, &a.callnum);
+        else
+#endif
+            r = VM_CallInterpreted(this, &a.callnum);
+#endif
+    }
+    --callLevel;
+
+    if (!oldVM) currentVM = oldVM;
+
+    return r;
+}
+
+void vm_s::LoadSymbols(void)
+{
+    // don't load symbols if not developer
+    if (!com_developer->integer)
+        return;
+
+    char name[MAX_QPATH];
+    COM_StripExtension(name, name, sizeof(name));
+
+    char symfile[MAX_QPATH];
+    Com_sprintf(symfile, sizeof(symfile), "vm/%s.map", name);
+
+    union {
+        char *c;
+        void *v;
+    } mapfile;
+
+    FS_ReadFile(symfile, &mapfile.v);
+    if (!mapfile.c)
+    {
+        Com_Printf("Couldn't load symbol file: %s\n", symfile);
+        return;
+    }
+
+    int numInstructions = instructionCount;
+
+    // parse the symbols
+    char* text_p = mapfile.c;
+    vmSymbol_t** prev = &symbols;
+    int count = 0;
+
+    while (1)
+    {
+        char* token = COM_Parse(&text_p);
+        if (!token[0])
+        {
+            break;
+        }
+
+        int segment = ParseHex(token);
+        if (segment)
+        {
+            COM_Parse(&text_p);
+            COM_Parse(&text_p);
+            continue;  // only load code segment values
+        }
+
+        token = COM_Parse(&text_p);
+        if (!token[0])
+        {
+            Com_Printf("WARNING: incomplete line at end of file\n");
+            break;
+        }
+        int value = ParseHex(token);
+
+        token = COM_Parse(&text_p);
+        if (!token[0])
+        {
+            Com_Printf("WARNING: incomplete line at end of file\n");
+            break;
+        }
+
+        int n = strlen(token);
+        vmSymbol_t* sym = (vmSymbol_t*)Hunk_Alloc(sizeof(*sym) + n, h_high);
+        *prev = sym;
+        prev = &sym->next;
+        sym->next = nullptr;
+
+        // convert value from an instruction number to a code offset
+        if (value >= 0 && value < numInstructions)
+        {
+            value = instructionPointers[value];
+        }
+
+        sym->symValue = value;
+        Q_strncpyz(sym->symName, token, n + 1);
+
+        count++;
+    }
+
+    numSymbols = count;
+    Com_Printf("%i symbols parsed from %s\n", count, symfile);
+    FS_FreeFile(mapfile.v);
+}
+

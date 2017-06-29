@@ -154,6 +154,8 @@ struct vm_s
     vmSymbol_t* ValueToFunctionSymbol(int value);
     int SymbolToValue(const char* symbol);
 
+    void LoadSymbols(void);
+
 // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
 // USED BY THE ASM CODE
     int programStack;  // the vm may be recursively entered
