@@ -1244,7 +1244,7 @@ void CL_InitUI(void)
     else
     {
         uiInterface = 2;
-        VM_ClearCallLevel(uivm);
+        uivm->ClearCallLevel();
     }
     probingUI = false;
 

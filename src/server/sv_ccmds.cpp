@@ -103,7 +103,6 @@ This allows fair starts with variable load times.
 static void SV_MapRestart_f( void ) {
 	int			i;
 	client_t	*client;
-	char		*denied;
 	int			delay;
 
 	// make sure we aren't restarting twice in the same frame
@@ -196,8 +195,10 @@ static void SV_MapRestart_f( void ) {
 		SV_AddServerCommand( client, "map_restart\n" );
 
 		// connect the client again, without the firstTime flag
-		denied = (char*)VM_ExplicitArgPtr( sv.gvm, sv.gvm->Call(GAME_CLIENT_CONNECT, i, false) );
-		if ( denied ) {
+		char* denied = (char*) sv.gvm->ArgPtr( sv.gvm->Call(GAME_CLIENT_CONNECT, i, false) );
+
+		if ( denied )
+        {
 			// this generally shouldn't happen, because the client
 			// was connected before the level change
 			SV_DropClient( client, denied );

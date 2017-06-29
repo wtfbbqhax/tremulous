@@ -229,7 +229,6 @@ void SV_DirectConnect( netadr_t from ) {
 	int			challenge;
 	char		*password;
 	int			startIndex;
-	intptr_t		denied;
 	int			count;
 	const char	*ip;
 	char		*challenge2;
@@ -452,10 +451,11 @@ gotnewcl:
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = sv.gvm->Call( GAME_CLIENT_CONNECT, clientNum, true ); // firstTime = true
-	if ( denied ) {
+	intptr_t denied = sv.gvm->Call( GAME_CLIENT_CONNECT, clientNum, true ); // firstTime = true
+	if ( denied )
+    {
 		// we can't just use VM_ArgPtr, because that is only valid inside a vm_s::Call()
-		char *str = (char*)VM_ExplicitArgPtr( sv.gvm, denied );
+		char *str = (char*) sv.gvm->ArgPtr( denied );
 
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n%s\n", str );
 		Com_DPrintf ("Game rejected a connection: %s.\n", str);

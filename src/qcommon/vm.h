@@ -49,12 +49,9 @@ void	VM_Forced_Unload_Done(void);
 void	VM_ClearCallLevel(vm_t *vm);
 vm_t	*VM_Restart(vm_t *vm, bool unpure);
 
-intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
-
 void	VM_Debug( int level );
 
 void	*VM_ArgPtr( intptr_t intValue );
-void	*VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue );
 
 #define	VMA(x) VM_ArgPtr(args[x])
 static ID_INLINE float _vmf(intptr_t x)

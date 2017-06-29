@@ -89,72 +89,65 @@ void VM_Init( void ) {
 
 /*
 ===============
-VM_ValueToSymbol
+vm_s::ValueToSymbol
 
 Assumes a program counter value
 ===============
 */
-const char *VM_ValueToSymbol( vm_t *vm, int value ) {
-	vmSymbol_t	*sym;
-	static char		text[MAX_TOKEN_CHARS];
+const char* vm_s::ValueToSymbol(int value)
+{
+    vmSymbol_t* sym = symbols;
+    if ( !sym ) return "NO SYMBOLS";
 
-	sym = vm->symbols;
-	if ( !sym ) {
-		return "NO SYMBOLS";
-	}
+    // find the symbol
+    while ( sym->next && sym->next->symValue <= value )
+        sym = sym->next;
 
-	// find the symbol
-	while ( sym->next && sym->next->symValue <= value ) {
-		sym = sym->next;
-	}
+    if ( value == sym->symValue )
+        return sym->symName;
 
-	if ( value == sym->symValue ) {
-		return sym->symName;
-	}
+    // FIXME: Return a std::string 
+    static char	text[MAX_TOKEN_CHARS];
+    Com_sprintf(text, sizeof(text), "%s+%i", sym->symName, value - sym->symValue );
 
-	Com_sprintf( text, sizeof( text ), "%s+%i", sym->symName, value - sym->symValue );
-
-	return text;
+    return text;
 }
 
 /*
 ===============
-VM_ValueToFunctionSymbol
+vm_s::ValueToFunctionSymbol
 
 For profiling, find the symbol behind this value
 ===============
 */
-vmSymbol_t *VM_ValueToFunctionSymbol( vm_t *vm, int value ) {
-	vmSymbol_t	*sym;
-	static vmSymbol_t	nullSym;
+vmSymbol_t* vm_s::ValueToFunctionSymbol(int value)
+{
+    static vmSymbol_t nullSym;
 
-	sym = vm->symbols;
-	if ( !sym ) {
-		return &nullSym;
-	}
+    vmSymbol_t* sym = symbols;
+    if ( !sym ) return &nullSym;
 
-	while ( sym->next && sym->next->symValue <= value ) {
-		sym = sym->next;
-	}
+    while ( sym->next && sym->next->symValue <= value )
+        sym = sym->next;
 
-	return sym;
+    return sym;
 }
 
 
 /*
 ===============
-VM_SymbolToValue
+vm_s::SymbolToValue
 ===============
 */
-int VM_SymbolToValue( vm_t *vm, const char *symbol ) {
-	vmSymbol_t	*sym;
+int vm_s::SymbolToValue(const char *symbol)
+{
+    for ( vmSymbol_t* sym = symbols; sym; sym = sym->next )
+    {
+        if ( !strcmp(symbol, sym->symName) )
+            return sym->symValue;
+    }
 
-	for ( sym = vm->symbols ; sym ; sym = sym->next ) {
-		if ( !strcmp( symbol, sym->symName ) ) {
-			return sym->symValue;
-		}
-	}
-	return 0;
+    return 0;
 }
 
 
@@ -194,7 +187,8 @@ const char *VM_SymbolForCompiledPointer( vm_t *vm, void *code ) {
 ParseHex
 ===============
 */
-int	ParseHex( const char *text ) {
+int	ParseHex( const char *text )
+{
 	int		value;
 	int		c;
 
@@ -734,11 +728,11 @@ void VM_Free( vm_t *vm ) {
 	lastVM = NULL;
 }
 
-void VM_Clear(void) {
+void VM_Clear(void)
+{
 	int i;
-	for (i=0;i<MAX_VM; i++) {
+	for (i=0;i<MAX_VM; i++)
 		VM_Free(&vmTable[i]);
-	}
 }
 
 void VM_Forced_Unload_Start(void) {
@@ -747,10 +741,6 @@ void VM_Forced_Unload_Start(void) {
 
 void VM_Forced_Unload_Done(void) {
 	forced_unload = 0;
-}
-
-void VM_ClearCallLevel(vm_t *vm) {
-	vm->callLevel = 0;
 }
 
 void *VM_ArgPtr( intptr_t intValue ) {
@@ -769,22 +759,19 @@ void *VM_ArgPtr( intptr_t intValue ) {
 	}
 }
 
-void *VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue ) {
-	if ( !intValue ) {
-		return NULL;
-	}
+void* vm_s::ArgPtr( intptr_t intValue )
+{
+	if ( !intValue )
+		return nullptr;
 
 	// currentVM is missing on reconnect here as well?
-	if ( currentVM==NULL )
-	  return NULL;
+	if ( !currentVM )
+	  return nullptr;
 
-	//
-	if ( vm->entryPoint ) {
-		return (void *)(vm->dataBase + intValue);
-	}
-	else {
-		return (void *)(vm->dataBase + (intValue & vm->dataMask));
-	}
+	if ( entryPoint )
+		return (void *)(dataBase + intValue);
+		
+    return (void *)(dataBase + (intValue & dataMask));
 }
 
 /*

@@ -807,13 +807,17 @@ void CL_InitCGame( void ) {
 	Cvar_Set( "cl_voipSendTarget", "" );
 	cgInterface = 0;
 	probingCG = true;
-	if ( setjmp( cgProbingJB ) == 0 ) {
+	if ( setjmp( cgProbingJB ) == 0 )
+    {
 		cgvm->Call( CG_VOIP_STRING );
-	} else {
-		VM_ClearCallLevel( cgvm );
+	}
+    else
+    {
+		cgvm->ClearCallLevel();
 		cgInterface = 2;
 	}
 	probingCG = false;
+
 	Cvar_Set( "cl_voipSendTarget", backup );
 
 	if ( ( clc.netchan.alternateProtocol == 2 ) != ( cgInterface == 2 ) ) {

@@ -143,11 +143,19 @@ typedef struct vmSymbol_s {
 #define VM_OFFSET_PROGRAM_STACK 0
 #define VM_OFFSET_SYSTEM_CALL 4
 
-struct vm_s {
+struct vm_s
+{
     intptr_t Call(int callnum, ...);
 
-    // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
-    // USED BY THE ASM CODE
+    void ClearCallLevel() { callLevel = 0; }
+    void* ArgPtr(intptr_t intValue);
+
+    const char* ValueToSymbol(int value);
+    vmSymbol_t* ValueToFunctionSymbol(int value);
+    int SymbolToValue(const char* symbol);
+
+// DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
+// USED BY THE ASM CODE
     int programStack;  // the vm may be recursively entered
     intptr_t (*systemCall)(intptr_t *parms);
 
@@ -197,9 +205,6 @@ int VM_CallCompiled(vm_t *vm, int *args);
 void VM_PrepareInterpreter(vm_t *vm, vmHeader_t *header);
 int VM_CallInterpreted(vm_t *vm, int *args);
 
-vmSymbol_t *VM_ValueToFunctionSymbol(vm_t *vm, int value);
-int VM_SymbolToValue(vm_t *vm, const char *symbol);
-const char *VM_ValueToSymbol(vm_t *vm, int value);
 void VM_LogSyscalls(int *args);
 
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n);

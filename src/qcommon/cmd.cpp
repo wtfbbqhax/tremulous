@@ -799,7 +799,7 @@ void Cmd_CompleteArgument( const char *command, char *args, int argNum )
 
 #ifndef DEDICATED
     // Forward command argument completion to CGAME VM
-    if( cgvm && !VM_Call( cgvm, CG_CONSOLE_COMPLETARGUMENT, argNum ) )
+    if( cgvm && !cgvm->Call( CG_CONSOLE_COMPLETARGUMENT, argNum ) )
 #endif
     // Call local completion if VM doesn't pick up
     for( cmd = cmd_functions; cmd; cmd = cmd->next )

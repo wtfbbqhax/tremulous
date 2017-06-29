@@ -669,11 +669,8 @@ void SV_SpawnServer(char *server)
         // send the new gamestate to all connected clients
         if (svs.clients[i].state >= CS_CONNECTED)
         {
-            char *denied;
-
             // connect the client again
-            denied =
-                (char *)VM_ExplicitArgPtr(sv.gvm, sv.gvm->Call( GAME_CLIENT_CONNECT, i, false));  // firstTime = false
+            char* denied = (char*) sv.gvm->ArgPtr( sv.gvm->Call( GAME_CLIENT_CONNECT, i, false) );
             if (denied)
             {
                 // this generally shouldn't happen, because the client

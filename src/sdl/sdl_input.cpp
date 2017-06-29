@@ -325,7 +325,7 @@ static void IN_GetUIMousePosition( int *x, int *y )
 {
 	if( uivm )
 	{
-		int pos = VM_Call( uivm, UI_MOUSE_POSITION );
+		int pos = uivm->Call( UI_MOUSE_POSITION );
 		*x = pos & 0xFFFF;
 		*y = ( pos >> 16 ) & 0xFFFF;
 
@@ -350,7 +350,7 @@ static void IN_SetUIMousePosition( int x, int y )
 	{
 		x = x * 640 / cls.glconfig.vidWidth;
 		y = y * 480 / cls.glconfig.vidHeight;
-		VM_Call( uivm, UI_SET_MOUSE_POSITION, x, y );
+		uivm->Call( UI_SET_MOUSE_POSITION, x, y );
 	}
 }
 
