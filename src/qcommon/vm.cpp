@@ -787,7 +787,6 @@ void *VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue ) {
 	}
 }
 
-
 /*
 ==============
 VM_Call
@@ -811,6 +810,66 @@ an OP_ENTER instruction, which will subtract space for
 locals from sp
 ==============
 */
+intptr_t vm_s::Call(int callnum, ...)
+{
+	vm_t *oldVM;
+	intptr_t r;
+
+	oldVM = currentVM;
+	currentVM = this;
+	lastVM = this;
+
+	++callLevel;
+
+	// if we have a dll loaded, call it directly
+	if ( entryPoint )
+    {
+		//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
+		int args[MAX_VMMAIN_ARGS-1];
+		va_list ap;
+
+		va_start(ap, callnum);
+		for (unsigned i = 0; i < ARRAY_LEN(args); i++)
+			args[i] = va_arg(ap, int);
+		va_end(ap);
+
+		r = entryPoint( callnum,  args[0],  args[1],  args[2] );
+	} else {
+#if ( id386 || idsparc ) && !defined __clang__ // calling convention doesn't need conversion in some cases
+#ifndef NO_VM_COMPILED
+		if ( compiled )
+			r = VM_CallCompiled( this, (int*)&callnum );
+		else
+#endif
+			r = VM_CallInterpreted( this, (int*)&callnum );
+#else
+		struct {
+			int callnum;
+			int args[MAX_VMMAIN_ARGS-1];
+		} a;
+		va_list ap;
+
+		a.callnum = callnum;
+		va_start(ap, callnum);
+		for (unsigned i = 0; i < ARRAY_LEN(a.args); i++)
+			a.args[i] = va_arg(ap, int);
+		va_end(ap);
+
+#ifndef NO_VM_COMPILED
+		if ( compiled )
+			r = VM_CallCompiled( this, &a.callnum );
+		else
+#endif
+			r = VM_CallInterpreted( this, &a.callnum );
+#endif
+	}
+	--callLevel;
+
+	if ( !oldVM )
+	  currentVM = oldVM;
+
+	return r;
+}
 
 intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
 {

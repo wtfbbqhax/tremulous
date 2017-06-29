@@ -387,12 +387,12 @@ static void CL_VoipParseTargets(void)
             {
                 if (!Q_stricmpn(target, "attacker", 8))
                 {
-                    val = VM_Call(cgvm, CG_LAST_ATTACKER);
+                    val = cgvm->Call( CG_LAST_ATTACKER);
                     target += 8;
                 }
                 else if (!Q_stricmpn(target, "crosshair", 9))
                 {
-                    val = VM_Call(cgvm, CG_CROSSHAIR_PLAYER);
+                    val = cgvm->Call( CG_CROSSHAIR_PLAYER);
                     target += 9;
                 }
                 else
@@ -1385,7 +1385,7 @@ void CL_Disconnect(bool showMainMenu)
 
     if (uivm && showMainMenu)
     {
-        VM_Call(uivm, UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_NONE);
+        uivm->Call( UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_NONE);
     }
 
     SCR_StopCinematic();
@@ -2947,7 +2947,7 @@ void CL_Frame(int msec)
     {
         // if disconnected, bring up the menu
         S_StopAllSounds();
-        VM_Call(uivm, UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_MAIN);
+        uivm->Call( UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_MAIN);
     }
 
     // if recording an avi, lock to a fixed fps

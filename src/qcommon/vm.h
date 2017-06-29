@@ -12,6 +12,7 @@ VIRTUAL MACHINE
 */
 
 typedef struct vm_s vm_t;
+#include "vm_local.h"
 
 typedef enum {
 	VMI_NATIVE,

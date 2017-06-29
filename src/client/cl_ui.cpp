@@ -1191,7 +1191,7 @@ void CL_ShutdownUI(void)
     {
         return;
     }
-    VM_Call(uivm, UI_SHUTDOWN);
+    uivm->Call( UI_SHUTDOWN);
     VM_Free(uivm);
     uivm = NULL;
 }
@@ -1220,7 +1220,7 @@ void CL_InitUI(void)
     }
 
     // sanity check
-    int v = VM_Call(uivm, UI_GETAPIVERSION);
+    int v = uivm->Call( UI_GETAPIVERSION);
     if (v != UI_API_VERSION)
     {
         // Free uivm now, so UI_SHUTDOWN doesn't get called later.
@@ -1236,7 +1236,7 @@ void CL_InitUI(void)
     probingUI = true;
     if (setjmp(uiProbingJB) == 0)
     {
-        if (VM_Call(uivm, UI_CONSOLE_COMMAND, 0) < 0)
+        if (uivm->Call( UI_CONSOLE_COMMAND, 0) < 0)
         {
             uiInterface = 2;
         }
@@ -1258,7 +1258,7 @@ void CL_InitUI(void)
     }
 
     // init for this gamestate
-    VM_Call(uivm, UI_INIT, (clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE));
+    uivm->Call( UI_INIT, (clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE));
 
     // show where the ui folder was loaded from
     Cmd_ExecuteString("which ui/\n");
@@ -1277,5 +1277,5 @@ bool UI_GameCommand(void)
 {
     if (!uivm) return false;
 
-    return (bool)VM_Call(uivm, UI_CONSOLE_COMMAND - (uiInterface == 2 ? 2 : 0), cls.realtime);
+    return (bool)uivm->Call( UI_CONSOLE_COMMAND - (uiInterface == 2 ? 2 : 0), cls.realtime);
 }

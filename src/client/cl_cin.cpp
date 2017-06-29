@@ -1655,7 +1655,7 @@ int CIN_PlayCinematic(const char *arg, int x, int y, int w, int h, int systemBit
         // close the menu
         if (uivm)
         {
-            VM_Call(uivm, UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_NONE);
+            uivm->Call( UI_SET_ACTIVE_MENU - (uiInterface == 2 ? 2 : 0), UIMENU_NONE);
         }
     }
     else

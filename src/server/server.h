@@ -83,6 +83,9 @@ struct configString_t {
 };
 
 struct server_t {
+
+    vm_t *gvm;				// game virtual machine
+
     serverState_t state;
     bool restarting;  // if true, send configstring changes during SS_LOADING
     int serverId;  // changes each server start
@@ -109,6 +112,7 @@ struct server_t {
 
     int restartTime;
     int time;
+
 };
 
 struct clientSnapshot_t {
