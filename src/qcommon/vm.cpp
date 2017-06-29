@@ -441,8 +441,8 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, bool alloc, bool unpure)
 		VM_Free( vm );
 		FS_FreeFile(header.v);
 
-		Com_Printf(S_COLOR_YELLOW "Warning: %s does not have a recognisable "
-				"magic number in its header\n", filename);
+		Com_Printf(S_COLOR_YELLOW "Warning: %s does not have a recognisable magic number in its header\n",
+                filename);
 		return NULL;
 	}
 
@@ -468,8 +468,8 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, bool alloc, bool unpure)
 			VM_Free(vm);
 			FS_FreeFile(header.v);
 
-			Com_Printf(S_COLOR_YELLOW "Warning: Data region size of %s not matching after "
-					"VM_Restart()\n", filename);
+			Com_Printf(S_COLOR_YELLOW "Warning: Data region size of %s not matching after VM_Restart()\n",
+                    filename);
 			return NULL;
 		}
 		
@@ -868,73 +868,6 @@ intptr_t vm_s::Call(int callnum, ...)
 	if ( !oldVM )
 	  currentVM = oldVM;
 
-	return r;
-}
-
-intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
-{
-	vm_t	*oldVM;
-	intptr_t r;
-
-	if(!vm || !vm->name[0])
-		Com_Error(ERR_FATAL, "VM_Call with NULL vm");
-
-	oldVM = currentVM;
-	currentVM = vm;
-	lastVM = vm;
-
-	if ( vm_debugLevel ) {
-	  Com_Printf( "VM_Call( %d )\n", callnum );
-	}
-
-	++vm->callLevel;
-	// if we have a dll loaded, call it directly
-	if ( vm->entryPoint ) {
-		//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
-		int args[MAX_VMMAIN_ARGS-1];
-		va_list ap;
-		va_start(ap, callnum);
-		for (unsigned i = 0; i < ARRAY_LEN(args); i++)
-        {
-			args[i] = va_arg(ap, int);
-		}
-		va_end(ap);
-
-		r = vm->entryPoint( callnum,  args[0],  args[1],  args[2] );
-	} else {
-#if ( id386 || idsparc ) && !defined __clang__ // calling convention doesn't need conversion in some cases
-#ifndef NO_VM_COMPILED
-		if ( vm->compiled )
-			r = VM_CallCompiled( vm, (int*)&callnum );
-		else
-#endif
-			r = VM_CallInterpreted( vm, (int*)&callnum );
-#else
-		struct {
-			int callnum;
-			int args[MAX_VMMAIN_ARGS-1];
-		} a;
-		va_list ap;
-
-		a.callnum = callnum;
-		va_start(ap, callnum);
-		for (unsigned i = 0; i < ARRAY_LEN(a.args); i++)
-        {
-			a.args[i] = va_arg(ap, int);
-		}
-		va_end(ap);
-#ifndef NO_VM_COMPILED
-		if ( vm->compiled )
-			r = VM_CallCompiled( vm, &a.callnum );
-		else
-#endif
-			r = VM_CallInterpreted( vm, &a.callnum );
-#endif
-	}
-	--vm->callLevel;
-
-	if ( oldVM != NULL )
-	  currentVM = oldVM;
 	return r;
 }
 
