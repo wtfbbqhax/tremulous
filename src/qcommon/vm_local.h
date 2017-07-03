@@ -146,6 +146,8 @@ typedef struct vmSymbol_s {
 struct vm_s
 {
     void* operator new(size_t size);
+    void operator delete(void *ptr);
+
     vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret);
     ~vm_s();
 

@@ -511,6 +511,17 @@ void * vm_s::operator new(size_t sz)
 
 /*
 ===============
+vm_s::operator delete 
+
+===============
+*/
+void vm_s::operator delete(void *ptr)
+{
+    Z_Free(ptr);
+}
+
+/*
+===============
 vm_s::vm_s
 
 Constructor
