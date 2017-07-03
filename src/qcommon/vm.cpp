@@ -36,13 +36,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "files.h"
 #include "vm_local.h"
 
-#include <type_traits>
+vm_t *currentVM = nullptr;
+vm_t *lastVM = nullptr;
 
-//static_assert(std::is_pod<vm_s>::value,
-//        "Error: struct vm_s is not POD");
-
-vm_t *currentVM = NULL;
-vm_t *lastVM = NULL;
 int vm_debugLevel;
 
 // used by Com_Error to get rid of running vm's before longjmp
@@ -246,7 +242,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     if (alloc)
     {
         // allocate zero filled space for initialized and uninitialized data
-        vm->dataBase = (unsigned char *)Hunk_Alloc(dataLength, h_high);
+        vm->dataBase = new unsigned char[dataLength](); //(unsigned char *)Hunk_Alloc(dataLength, h_high);
         vm->dataMask = dataLength - 1;
     }
     else
@@ -284,7 +280,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
 
         if (alloc)
         {
-            vm->jumpTableTargets = (unsigned char *)Hunk_Alloc(header.h->jtrgLength, h_high);
+            vm->jumpTableTargets = new unsigned char[header.h->jtrgLength](); //(unsigned char *)Hunk_Alloc(header.h->jtrgLength, h_high);
         }
         else
         {
@@ -499,29 +495,6 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 
 /*
 ===============
-vm_s::operator new
-
-Allocate the VM in hunk memory.
-===============
-*/
-void * vm_s::operator new(size_t sz)
-{
-    return Hunk_Alloc(sz, h_high);
-}
-
-/*
-===============
-vm_s::operator delete 
-
-===============
-*/
-void vm_s::operator delete(void *ptr)
-{
-    Z_Free(ptr);
-}
-
-/*
-===============
 vm_s::vm_s
 
 Constructor
@@ -535,7 +508,7 @@ vm_s::vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_
     void *startSearch = NULL;
 
     assert(module);
-    assert(modlue[0]);
+    assert(module[0]);
     assert(systemCalls);
 
     Q_strncpyz(name, module, sizeof(name));
@@ -572,7 +545,7 @@ vm_s::vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_
 
     // allocate space for the jump targets, which will be filled in by the compile/prep functions
     instructionCount = header->instructionCount;
-    instructionPointers = (intptr_t *)Hunk_Alloc(instructionCount * sizeof(*instructionPointers), h_high);
+    instructionPointers = new intptr_t[instructionCount](); //(intptr_t *)Hunk_Alloc(instructionCount * sizeof(*instructionPointers), h_high);
 
     // copy or compile the instructions
     codeLength = header->codeLength;
@@ -609,20 +582,18 @@ vm_s::vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_
 
 vm_s::~vm_s()
 {
+    // This will call VM_Destroy_Compiled()
     if (destroy)
         destroy(this);
 
     if (dllHandle)
         Sys_UnloadDll(dllHandle);
 
-	if ( codeBase )
-		Z_Free( codeBase );
-
 	if ( dataBase )
-		Z_Free( dataBase );
+		delete dataBase;
 
 	if ( instructionPointers )
-		Z_Free( instructionPointers );
+		delete instructionPointers;
 }
 
 /*
@@ -842,7 +813,7 @@ void vm_s::LoadSymbols(void)
         }
 
         int n = strlen(token);
-        vmSymbol_t* sym = (vmSymbol_t*)Hunk_Alloc(sizeof(*sym) + n, h_high);
+        vmSymbol_t* sym = new vmSymbol_t[n]; // (vmSymbol_t*)Hunk_Alloc(sizeof(*sym) + n, h_high);
         *prev = sym;
         prev = &sym->next;
         sym->next = nullptr;

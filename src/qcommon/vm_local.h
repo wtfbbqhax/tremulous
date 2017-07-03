@@ -145,9 +145,6 @@ typedef struct vmSymbol_s {
 
 struct vm_s
 {
-    void* operator new(size_t size);
-    void operator delete(void *ptr);
-
     vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret);
     ~vm_s();
 
@@ -164,44 +161,44 @@ struct vm_s
 
 // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
 // USED BY THE ASM CODE
-    int programStack;  // the vm may be recursively entered
-    intptr_t (*systemCall)(intptr_t *parms);
+    int programStack = 0;  // the vm may be recursively entered
+    intptr_t (*systemCall)(intptr_t *parms) = nullptr;
 
     //------------------------------------
 
     char name[MAX_QPATH];
-    void *searchPath;  // hint for FS_ReadFileDir()
+    void *searchPath = nullptr;  // hint for FS_ReadFileDir()
 
     // for dynamic linked modules
-    void *dllHandle;
-    intptr_t(QDECL *entryPoint)(int callNum, ...);
-    void (*destroy)(vm_t *self);
+    void *dllHandle = nullptr;
+    intptr_t(QDECL *entryPoint)(int callNum, ...) = nullptr;
+    void (*destroy)(vm_t *self) = nullptr;
 
     // for interpreted modules
     bool currentlyInterpreting;
 
     bool compiled;
-    byte *codeBase;
-    int entryOfs;
-    int codeLength;
+    byte *codeBase = nullptr;
+    int entryOfs = 0;
+    int codeLength = 0;
 
-    intptr_t *instructionPointers;
-    int instructionCount;
+    intptr_t *instructionPointers = nullptr;
+    int instructionCount = 0;
 
-    byte *dataBase;
-    int dataMask;
+    byte *dataBase = nullptr;
+    int dataMask = 0;
 
-    int stackBottom;  // if programStack < stackBottom, error
+    int stackBottom = 0;  // if programStack < stackBottom, error
 
-    int numSymbols;
-    struct vmSymbol_s *symbols;
+    int numSymbols = 0;
+    struct vmSymbol_s *symbols = nullptr;
 
-    int callLevel;  // counts recursive VM_Call
-    int breakFunction;  // increment breakCount on function entry to this
-    int breakCount;
+    int callLevel = 0;  // counts recursive VM_Call
+    int breakFunction = 0;  // increment breakCount on function entry to this
+    int breakCount = 0;
 
-    byte *jumpTableTargets;
-    int numJumpTableTargets;
+    byte *jumpTableTargets = nullptr;
+    int numJumpTableTargets = 0;
 };
 
 extern vm_t *currentVM;
