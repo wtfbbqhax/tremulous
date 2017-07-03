@@ -379,15 +379,18 @@ CL_ShutdonwCGame
 
 ====================
 */
-void CL_ShutdownCGame( void ) {
+void CL_ShutdownCGame( void )
+{
 	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
 	cls.cgameStarted = false;
-	if ( !cgvm ) {
+
+	if ( !cgvm )
 		return;
-	}
+
 	cgvm->Call( CG_SHUTDOWN );
-	VM_Free( cgvm );
-	cgvm = NULL;
+    delete cgvm;	
+
+	cgvm = nullptr;
 }
 
 static int	FloatAsInt( float f ) {
@@ -797,10 +800,7 @@ void CL_InitCGame( void ) {
 			interpret = VMI_COMPILED;
 	}
 
-	cgvm = VM_Create( "cgame", CL_CgameSystemCalls, interpret );
-	if ( !cgvm ) {
-		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
-	}
+	cgvm = new vm_s( "cgame", CL_CgameSystemCalls, interpret );
 	clc.state = CA_LOADING;
 
 	Cvar_VariableStringBuffer( "cl_voipSendTarget", backup, sizeof( backup ) );

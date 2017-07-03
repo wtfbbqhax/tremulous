@@ -36,6 +36,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "files.h"
 #include "vm_local.h"
 
+#include <type_traits>
+
+//static_assert(std::is_pod<vm_s>::value,
+//        "Error: struct vm_s is not POD");
+
 vm_t *currentVM = NULL;
 vm_t *lastVM = NULL;
 int vm_debugLevel;
@@ -44,9 +49,8 @@ int vm_debugLevel;
 static int forced_unload;
 
 #define MAX_VM 3
-vm_t vmTable[MAX_VM];
+//vm_t vmTable[MAX_VM];
 
-void VM_VmInfo_f(void);
 void VM_VmProfile_f(void);
 
 void VM_Debug(int level) { vm_debugLevel = level; }
@@ -58,9 +62,6 @@ void VM_Init(void)
     Cvar_Get("vm_ui", "2", CVAR_ARCHIVE);  // !@# SHIP WITH SET TO 2
 
     Cmd_AddCommand("vmprofile", VM_VmProfile_f);
-    Cmd_AddCommand("vminfo", VM_VmInfo_f);
-
-    ::memset(vmTable, 0, sizeof(vmTable));
 }
 
 static int ParseHex(const char *text)
@@ -175,7 +176,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     if (!header.h)
     {
         Com_Printf("Failed.\n");
-        VM_Free(vm);
+        delete vm;
 
         Com_Printf(S_COLOR_YELLOW "Warning: Couldn't open VM file %s\n", filename);
 
@@ -199,7 +200,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         if (header.h->jtrgLength < 0 || header.h->bssLength < 0 || header.h->dataLength < 0 ||
             header.h->litLength < 0 || header.h->codeLength <= 0)
         {
-            VM_Free(vm);
+            delete vm;
             FS_FreeFile(header.v);
 
             Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
@@ -218,7 +219,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         // validate
         if (header.h->bssLength < 0 || header.h->dataLength < 0 || header.h->litLength < 0 || header.h->codeLength <= 0)
         {
-            VM_Free(vm);
+            delete vm;
             FS_FreeFile(header.v);
 
             Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
@@ -227,7 +228,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     }
     else
     {
-        VM_Free(vm);
+        delete vm;
         FS_FreeFile(header.v);
 
         Com_Printf(S_COLOR_YELLOW "Warning: %s does not have a recognisable magic number in its header\n", filename);
@@ -253,7 +254,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         // clear the data, but make sure we're not clearing more than allocated
         if (vm->dataMask + 1 != dataLength)
         {
-            VM_Free(vm);
+            delete vm;
             FS_FreeFile(header.v);
 
             Com_Printf(S_COLOR_YELLOW "Warning: Data region size of %s not matching after VM_Restart()\n", filename);
@@ -289,7 +290,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         {
             if (vm->numJumpTableTargets != previousNumJumpTableTargets)
             {
-                VM_Free(vm);
+                delete vm; 
                 FS_FreeFile(header.v);
 
                 Com_Printf(S_COLOR_YELLOW
@@ -339,9 +340,9 @@ vm_t *VM_Restart(vm_t *vm, bool unpure)
         systemCall = vm->systemCall;
         Q_strncpyz(name, vm->name, sizeof(name));
 
-        VM_Free(vm);
+        delete vm;
 
-        vm = VM_Create(name, systemCall, VMI_NATIVE);
+        vm = new vm_s(name, systemCall, VMI_NATIVE);
         return vm;
     }
 
@@ -360,185 +361,10 @@ vm_t *VM_Restart(vm_t *vm, bool unpure)
     return vm;
 }
 
-/*
-================
-VM_Create
-
-If image ends in .qvm it will be interpreted, otherwise
-it will attempt to load as a system dll
-================
-*/
-vm_t *VM_Create(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret)
-{
-    vm_t *vm;
-    vmHeader_t *header;
-    int i, remaining, retval;
-    char filename[MAX_OSPATH];
-    void *startSearch = NULL;
-
-    if (!module || !module[0] || !systemCalls)
-    {
-        Com_Error(ERR_FATAL, "VM_Create: bad parms");
-    }
-
-    remaining = Hunk_MemoryRemaining();
-
-    // see if we already have the VM
-    for (i = 0; i < MAX_VM; i++)
-    {
-        if (!Q_stricmp(vmTable[i].name, module))
-        {
-            vm = &vmTable[i];
-            return vm;
-        }
-    }
-
-    // find a free vm
-    for (i = 0; i < MAX_VM; i++)
-    {
-        if (!vmTable[i].name[0])
-        {
-            break;
-        }
-    }
-
-    if (i == MAX_VM)
-    {
-        Com_Error(ERR_FATAL, "VM_Create: no free vm_t");
-    }
-
-    vm = &vmTable[i];
-
-    Q_strncpyz(vm->name, module, sizeof(vm->name));
-
-    do
-    {
-        retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, (interpret == VMI_NATIVE));
-
-        if (retval == VMI_NATIVE)
-        {
-            Com_Printf("Try loading dll file %s\n", filename);
-
-            vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
-
-            if (vm->dllHandle)
-            {
-                vm->systemCall = systemCalls;
-                return vm;
-            }
-
-            Com_Printf("Failed loading dll, trying next\n");
-        }
-        else if (retval == VMI_COMPILED)
-        {
-            vm->searchPath = startSearch;
-            if ((header = VM_LoadQVM(vm, true, false))) break;
-
-            // VM_Free overwrites the name on failed load
-            Q_strncpyz(vm->name, module, sizeof(vm->name));
-        }
-    } while (retval >= 0);
-
-    if (retval < 0) return NULL;
-
-    vm->systemCall = systemCalls;
-
-    // allocate space for the jump targets, which will be filled in by the compile/prep functions
-    vm->instructionCount = header->instructionCount;
-    vm->instructionPointers = (intptr_t *)Hunk_Alloc(vm->instructionCount * sizeof(*vm->instructionPointers), h_high);
-
-    // copy or compile the instructions
-    vm->codeLength = header->codeLength;
-
-    vm->compiled = false;
-
-#ifdef NO_VM_COMPILED
-    if (interpret >= VMI_COMPILED)
-    {
-        Com_Printf("Architecture doesn't have a bytecode compiler, using interpreter\n");
-        interpret = VMI_BYTECODE;
-    }
-#else
-    if (interpret != VMI_BYTECODE)
-    {
-        vm->compiled = true;
-        VM_Compile(vm, header);
-    }
-#endif
-    // VM_Compile may have reset vm->compiled if compilation failed
-    if (!vm->compiled)
-    {
-        VM_PrepareInterpreter(vm, header);
-    }
-
-    // free the original file
-    FS_FreeFile(header);
-
-    // load the map file
-    vm->LoadSymbols();
-
-    // the stack is implicitly at the end of the image
-    vm->programStack = vm->dataMask + 1;
-    vm->stackBottom = vm->programStack - PROGRAM_STACK_SIZE;
-
-    Com_Printf("%s loaded in %d bytes on the hunk\n", module, remaining - Hunk_MemoryRemaining());
-
-    return vm;
-}
-
-/*
-==============
-VM_Free
-==============
-*/
-void VM_Free(vm_t *vm)
-{
-    if (!vm)
-    {
-        return;
-    }
-
-    if (vm->callLevel)
-    {
-        if (!forced_unload)
-        {
-            Com_Error(ERR_FATAL, "VM_Free(%s) on running vm", vm->name);
-            return;
-        }
-        else
-        {
-            Com_Printf("forcefully unloading %s vm\n", vm->name);
-        }
-    }
-
-    if (vm->destroy) vm->destroy(vm);
-
-    if (vm->dllHandle)
-    {
-        Sys_UnloadDll(vm->dllHandle);
-        ::memset(vm, 0, sizeof(*vm));
-    }
-#if 0  // now automatically freed by hunk
-	if ( vm->codeBase ) {
-		Z_Free( vm->codeBase );
-	}
-	if ( vm->dataBase ) {
-		Z_Free( vm->dataBase );
-	}
-	if ( vm->instructionPointers ) {
-		Z_Free( vm->instructionPointers );
-	}
-#endif
-    ::memset(vm, 0, sizeof(*vm));
-
-    currentVM = NULL;
-    lastVM = NULL;
-}
-
 void VM_Clear(void)
 {
     int i;
-    for (i = 0; i < MAX_VM; i++) VM_Free(&vmTable[i]);
+    //for (i = 0; i < MAX_VM; i++) VM_Free(&vmTable[i]);
 }
 
 void VM_Forced_Unload_Start(void) { forced_unload = 1; }
@@ -636,45 +462,6 @@ void VM_VmProfile_f(void)
 }
 
 /*
-==============
-VM_VmInfo_f
-
-==============
-*/
-void VM_VmInfo_f(void)
-{
-    vm_t *vm;
-    int i;
-
-    Com_Printf("Registered virtual machines:\n");
-    for (i = 0; i < MAX_VM; i++)
-    {
-        vm = &vmTable[i];
-        if (!vm->name[0])
-        {
-            break;
-        }
-        Com_Printf("%s : ", vm->name);
-        if (vm->dllHandle)
-        {
-            Com_Printf("native\n");
-            continue;
-        }
-        if (vm->compiled)
-        {
-            Com_Printf("compiled on load\n");
-        }
-        else
-        {
-            Com_Printf("interpreted\n");
-        }
-        Com_Printf("    code length : %7i\n", vm->codeLength);
-        Com_Printf("    table length: %7i\n", vm->instructionCount * 4);
-        Com_Printf("    data length : %7i\n", vm->dataMask + 1);
-    }
-}
-
-/*
 ===============
 VM_LogSyscalls
 
@@ -708,6 +495,123 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
     }
 
     ::memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
+}
+
+/*
+===============
+vm_s::operator new
+
+Allocate the VM in hunk memory.
+===============
+*/
+void * vm_s::operator new(size_t sz)
+{
+    return Hunk_Alloc(sz, h_high);
+}
+
+/*
+===============
+vm_s::vm_s
+
+Constructor
+===============
+*/
+vm_s::vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret)
+{
+    vmHeader_t *header;
+    int i, remaining, retval;
+    char filename[MAX_OSPATH];
+    void *startSearch = NULL;
+
+    assert(module);
+    assert(modlue[0]);
+    assert(systemCalls);
+
+    Q_strncpyz(name, module, sizeof(name));
+
+    do {
+        // FIXME: Make dllHandle an constructor argument; Otherwise an exception is required (which breaks RAII)
+        retval = FS_FindVM(&startSearch, filename, sizeof(filename),
+                module, interpret == VMI_NATIVE);
+
+        if (retval == VMI_NATIVE)
+        {
+            // FIXME: Make dllHandle an constructor argument; Otherwise an exception is required (which breaks RAII)
+            dllHandle = Sys_LoadGameDll(filename, &entryPoint, VM_DllSyscall);
+
+            if (dllHandle)
+                systemCall = systemCalls;
+        }
+        else if (retval == VMI_COMPILED)
+        {
+            searchPath = startSearch;
+            if ((header = VM_LoadQVM(this, true, false)))
+                break;
+
+            // VM_Free overwrites the name on failed load
+            Q_strncpyz(name, module, sizeof(name));
+        }
+    } while (retval >= 0);
+
+    // FIXME: Make this impossible via the above FIXME's 
+    //if (retval < 0)
+    //    return nullptr;
+
+    systemCall = systemCalls;
+
+    // allocate space for the jump targets, which will be filled in by the compile/prep functions
+    instructionCount = header->instructionCount;
+    instructionPointers = (intptr_t *)Hunk_Alloc(instructionCount * sizeof(*instructionPointers), h_high);
+
+    // copy or compile the instructions
+    codeLength = header->codeLength;
+
+    compiled = false;
+
+#ifdef NO_VM_COMPILED
+    if (interpret >= VMI_COMPILED)
+    {
+        Com_Printf("Architecture doesn't have a bytecode compiler, using interpreter\n");
+        interpret = VMI_BYTECODE;
+    }
+#else
+    if (interpret != VMI_BYTECODE)
+    {
+        compiled = true;
+        VM_Compile(this, header);
+    }
+#endif
+    // VM_Compile may have reset this->compiled if compilation failed
+    if (!compiled)
+        VM_PrepareInterpreter(this, header);
+
+    // free the original file
+    FS_FreeFile(header);
+
+    // load the map file
+    LoadSymbols();
+
+    // the stack is implicitly at the end of the image
+    programStack = dataMask + 1;
+    stackBottom = programStack - PROGRAM_STACK_SIZE;
+}
+
+vm_s::~vm_s()
+{
+    if (destroy)
+        destroy(this);
+
+    if (dllHandle)
+        Sys_UnloadDll(dllHandle);
+
+	if ( codeBase )
+		Z_Free( codeBase );
+
+	if ( dataBase )
+		Z_Free( dataBase );
+
+	if ( instructionPointers )
+		Z_Free( instructionPointers );
 }
 
 /*

@@ -1187,12 +1187,13 @@ void CL_ShutdownUI(void)
 {
     Key_SetCatcher(Key_GetCatcher() & ~KEYCATCH_UI);
     cls.uiStarted = false;
+
     if (!uivm)
-    {
         return;
-    }
+
     uivm->Call( UI_SHUTDOWN);
-    VM_Free(uivm);
+    delete uivm; 
+
     uivm = NULL;
 }
 
@@ -1211,21 +1212,15 @@ void CL_InitUI(void)
         if (interpret != VMI_COMPILED && interpret != VMI_BYTECODE) interpret = VMI_COMPILED;
     }
 
-    uivm = VM_Create("ui", CL_UISystemCalls, interpret);
-    if (!uivm)
-    {
-        Com_Printf("Failed to find a valid UI vm. The following paths were searched:\n");
-        Cmd_ExecuteString("path /\n");
-        Com_Error(ERR_DROP, "VM_Create on UI failed");
-    }
+    uivm = new vm_s("ui", CL_UISystemCalls, interpret);
 
     // sanity check
     int v = uivm->Call( UI_GETAPIVERSION);
     if (v != UI_API_VERSION)
     {
         // Free uivm now, so UI_SHUTDOWN doesn't get called later.
-        VM_Free(uivm);
-        uivm = NULL;
+        delete uivm; 
+        uivm = nullptr;
 
         cls.uiStarted = false;
         Com_Error(ERR_DROP, "User Interface is version %d, expected %d", v, UI_API_VERSION);

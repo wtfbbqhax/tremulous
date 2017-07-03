@@ -145,6 +145,10 @@ typedef struct vmSymbol_s {
 
 struct vm_s
 {
+    void* operator new(size_t size);
+    vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret);
+    ~vm_s();
+
     intptr_t Call(int callnum, ...);
 
     void ClearCallLevel() { callLevel = 0; }

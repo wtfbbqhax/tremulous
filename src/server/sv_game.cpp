@@ -507,12 +507,15 @@ SV_ShutdownGameProgs
 Called every time a map changes
 ===============
 */
-void SV_ShutdownGameProgs( void ) {
-	if ( !sv.gvm ) {
+void SV_ShutdownGameProgs( void )
+{
+	if ( !sv.gvm )
 		return;
-	}
+
 	sv.gvm->Call( GAME_SHUTDOWN, false );
-	VM_Free( sv.gvm );
+
+	delete sv.gvm;
+
 	sv.gvm = nullptr;
 }
 
@@ -576,11 +579,7 @@ Called on a normal map change, not on a map_restart
 */
 void SV_InitGameProgs( void ) {
 	// load the dll or bytecode
-	sv.gvm = VM_Create( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue( "vm_game" ) );
-	if ( !sv.gvm ) {
-		Com_Error( ERR_FATAL, "VM_Create on game failed" );
-	}
-
+	sv.gvm = new vm_s( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue( "vm_game" ) );
 	SV_InitGameVM( false );
 }
 
