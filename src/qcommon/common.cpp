@@ -318,11 +318,9 @@ void QDECL Com_Error( int code, const char *fmt, ... )
 
     if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT)
     {
-        VM_Forced_Unload_Start();
         SV_Shutdown( "Server disconnected" );
         CL_Disconnect( true );
         CL_FlushMemory( );
-        VM_Forced_Unload_Done();
         // make sure we can get at our local stuff
         FS_PureServerSetLoadedPaks("", "");
         com_errorEntered = false;
@@ -331,21 +329,17 @@ void QDECL Com_Error( int code, const char *fmt, ... )
     else if (code == ERR_DROP)
     {
         Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
-        VM_Forced_Unload_Start();
         SV_Shutdown (va("Server crashed: %s",  com_errorMessage));
         CL_Disconnect( true );
         CL_FlushMemory( );
-        VM_Forced_Unload_Done();
         FS_PureServerSetLoadedPaks("", "");
         com_errorEntered = false;
         longjmp (abortframe, -1);
     }
     else
     {
-        VM_Forced_Unload_Start();
         CL_Shutdown(va("Client fatal crashed: %s", com_errorMessage), true, true);
         SV_Shutdown(va("Server fatal crashed: %s", com_errorMessage));
-        VM_Forced_Unload_Done();
     }
 
     Com_Shutdown ();
@@ -371,10 +365,8 @@ void Engine_Exit(const char* p )
         // which would trigger an unload of active VM error.
         // Sys_Quit will kill this process anyways, so
         // a corrupt call stack makes no difference
-        VM_Forced_Unload_Start();
         SV_Shutdown(p[0] ? p : "Server quit");
         CL_Shutdown(p[0] ? p : "Client quit", true, true);
-        VM_Forced_Unload_Done();
         Com_Shutdown();
         FS_Shutdown(true);
     }
@@ -1707,7 +1699,7 @@ void Hunk_Clear( void )
     hunk_temp = &hunk_high;
 
     Com_Printf( "Hunk_Clear: reset the hunk ok\n" );
-    VM_Clear();
+
 #ifdef HUNK_DEBUG
     hunkblocks = NULL;
 #endif

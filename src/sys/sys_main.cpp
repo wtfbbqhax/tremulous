@@ -635,12 +635,10 @@ void Sys_SigHandler( int signal )
         char const* msg = va("Received signal %d", signal);
 
         signalcaught = true;
-        VM_Forced_Unload_Start();
 #ifndef DEDICATED
         CL_Shutdown(va("Received signal %d", signal), true, true);
 #endif
         SV_Shutdown(msg);
-        VM_Forced_Unload_Done();
     }
 
     if( signal == SIGTERM || signal == SIGINT )

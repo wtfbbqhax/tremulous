@@ -289,7 +289,8 @@ SV_GameSystemCalls
 The module is making a system call
 ====================
 */
-intptr_t SV_GameSystemCalls( intptr_t *args ) {
+intptr_t SV_GameSystemCalls( intptr_t *args )
+{
     switch( args[0] )
     {
         case G_PRINT:
@@ -526,7 +527,8 @@ SV_InitGameVM
 Called for both a full init and a restart
 ==================
 */
-static void SV_InitGameVM( bool restart ) {
+static void SV_InitGameVM( bool restart )
+{
 	int		i;
 
 	// start the entity parsing at the beginning
@@ -536,9 +538,8 @@ static void SV_InitGameVM( bool restart ) {
 	// a previous level
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=522
 	//   now done before GAME_INIT call
-	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		svs.clients[i].gentity = NULL;
-	}
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+		svs.clients[i].gentity = nullptr;
 	
 	// use the current msec count for a random seed
 	// init for this gamestate
@@ -577,9 +578,10 @@ SV_InitGameProgs
 Called on a normal map change, not on a map_restart
 ===============
 */
-void SV_InitGameProgs( void ) {
+void SV_InitGameProgs( void )
+{
 	// load the dll or bytecode
-	sv.gvm = new vm_s( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue( "vm_game" ) );
+	sv.gvm = new vm_s( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue("vm_game") );
 	SV_InitGameVM( false );
 }
 

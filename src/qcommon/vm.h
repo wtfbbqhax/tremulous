@@ -44,10 +44,6 @@ vm_t	*VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), vmInte
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 
 void	VM_Free( vm_t *vm );
-void	VM_Clear(void);
-void	VM_Forced_Unload_Start(void);
-void	VM_Forced_Unload_Done(void);
-void	VM_ClearCallLevel(vm_t *vm);
 vm_t	*VM_Restart(vm_t *vm, bool unpure);
 
 void	VM_Debug( int level );

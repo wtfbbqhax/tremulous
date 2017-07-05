@@ -41,21 +41,15 @@ vm_t *lastVM = nullptr;
 
 int vm_debugLevel;
 
-// used by Com_Error to get rid of running vm's before longjmp
-static int forced_unload;
-
-#define MAX_VM 3
-//vm_t vmTable[MAX_VM];
-
 void VM_VmProfile_f(void);
 
 void VM_Debug(int level) { vm_debugLevel = level; }
 
 void VM_Init(void)
 {
-    Cvar_Get("vm_cgame", "2", CVAR_ARCHIVE);  // !@# SHIP WITH SET TO 2
-    Cvar_Get("vm_game", "2", CVAR_ARCHIVE);  // !@# SHIP WITH SET TO 2
-    Cvar_Get("vm_ui", "2", CVAR_ARCHIVE);  // !@# SHIP WITH SET TO 2
+    Cvar_Get("vm_cgame", "2", CVAR_ARCHIVE);
+    Cvar_Get("vm_game", "2", CVAR_ARCHIVE);
+    Cvar_Get("vm_ui", "2", CVAR_ARCHIVE);
 
     Cmd_AddCommand("vmprofile", VM_VmProfile_f);
 }
@@ -242,7 +236,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     if (alloc)
     {
         // allocate zero filled space for initialized and uninitialized data
-        vm->dataBase = new unsigned char[dataLength](); //(unsigned char *)Hunk_Alloc(dataLength, h_high);
+        vm->dataBase = new unsigned char[dataLength]();
         vm->dataMask = dataLength - 1;
     }
     else
@@ -280,7 +274,7 @@ vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
 
         if (alloc)
         {
-            vm->jumpTableTargets = new unsigned char[header.h->jtrgLength](); //(unsigned char *)Hunk_Alloc(header.h->jtrgLength, h_high);
+            vm->jumpTableTargets = new unsigned char[header.h->jtrgLength]();
         }
         else
         {
@@ -337,13 +331,10 @@ vm_t *VM_Restart(vm_t *vm, bool unpure)
         Q_strncpyz(name, vm->name, sizeof(name));
 
         delete vm;
-
         vm = new vm_s(name, systemCall, VMI_NATIVE);
+
         return vm;
     }
-
-    // load the image
-    Com_Printf("VM_Restart()\n");
 
     if (!(header = VM_LoadQVM(vm, false, unpure)))
     {
@@ -356,15 +347,6 @@ vm_t *VM_Restart(vm_t *vm, bool unpure)
 
     return vm;
 }
-
-void VM_Clear(void)
-{
-    int i;
-    //for (i = 0; i < MAX_VM; i++) VM_Free(&vmTable[i]);
-}
-
-void VM_Forced_Unload_Start(void) { forced_unload = 1; }
-void VM_Forced_Unload_Done(void) { forced_unload = 0; }
 
 void *VM_ArgPtr(intptr_t intValue)
 {
@@ -457,27 +439,6 @@ void VM_VmProfile_f(void)
     Z_Free(sorted);
 }
 
-/*
-===============
-VM_LogSyscalls
-
-Insert calls to this while debugging the vm compiler
-===============
-*/
-void VM_LogSyscalls(int *args)
-{
-    static int callnum;
-    static FILE *f;
-
-    if (!f)
-    {
-        f = fopen("syscalls.log", "w");
-    }
-    callnum++;
-    fprintf(f, "%i: %p (%i) = %i %i %i %i\n", callnum, (void *)(args - (int *)currentVM->dataBase), args[0], args[1],
-        args[2], args[3], args[4]);
-}
-
 // VM_BlockCopy
 // Executes a block copy operation within currentVM data space
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
@@ -545,7 +506,7 @@ vm_s::vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_
 
     // allocate space for the jump targets, which will be filled in by the compile/prep functions
     instructionCount = header->instructionCount;
-    instructionPointers = new intptr_t[instructionCount](); //(intptr_t *)Hunk_Alloc(instructionCount * sizeof(*instructionPointers), h_high);
+    instructionPointers = new intptr_t[instructionCount]();
 
     // copy or compile the instructions
     codeLength = header->codeLength;
@@ -745,7 +706,7 @@ intptr_t vm_s::Call(int callnum, ...)
     }
     --callLevel;
 
-    if (!oldVM) currentVM = oldVM;
+    if ( oldVM ) currentVM = oldVM;
 
     return r;
 }
