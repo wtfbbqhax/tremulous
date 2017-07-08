@@ -10,13 +10,12 @@
 #define SYS_SHARED_H 1
 
 #include <stdio.h>
+#include <sys/types.h>
 
+#include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "../qcommon/net.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "../qcommon/vm.h"
 
 #define MAX_JOYSTICK_AXIS 16
 
@@ -39,9 +38,12 @@ enum netadrtype_t;
 void Sys_Init(void);
 
 // general development dll loading for virtual machine testing
-void *QDECL Sys_LoadGameDll(const char *name,
-                            intptr_t(QDECL **entryPoint)(int, ...),
-                            intptr_t(QDECL *systemcalls)(intptr_t, ...));
+//using SystemCalls = intptr_t (*)(intptr_t*);
+using SystemCalls = intptr_t (*)(intptr_t, ...);
+using SystemCall = intptr_t (*)(intptr_t*);
+using Entry = void (*)(SystemCalls systemcalls);
+using EntryPoint = intptr_t (QDECL *)(int, ...);
+void* Sys_LoadGameDll(const char *name, EntryPoint* entryPoint, SystemCalls systemcalls);
 
 void Sys_UnloadDll(void *dllHandle);
 bool Sys_DllExtension(const char *name);
@@ -96,9 +98,5 @@ bool Sys_LowPhysicalMemory(void);
 void Sys_SetEnv(const char *name, const char *value);
 
 bool Sys_WritePIDFile(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

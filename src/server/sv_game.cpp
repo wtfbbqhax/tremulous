@@ -291,6 +291,9 @@ The module is making a system call
 */
 intptr_t SV_GameSystemCalls( intptr_t *args )
 {
+
+#define	VMA(x) sv.gvm->ArgPtr(args[x])
+
     switch( args[0] )
     {
         case G_PRINT:
@@ -562,10 +565,9 @@ void SV_RestartGameProgs( void ) {
 	sv.gvm->Call( GAME_SHUTDOWN, true );
 
 	// do a restart instead of a free
-	sv.gvm = VM_Restart(sv.gvm, true);
-	if ( !sv.gvm ) {
-		Com_Error( ERR_FATAL, "VM_Restart on game failed" );
-	}
+	//sv.gvm = VM_Restart(sv.gvm, true);
+    delete sv.gvm;
+	sv.gvm = VMFactory::createVM(VMI_NATIVE, "game", SV_GameSystemCalls);
 
 	SV_InitGameVM( true );
 }
@@ -581,7 +583,7 @@ Called on a normal map change, not on a map_restart
 void SV_InitGameProgs( void )
 {
 	// load the dll or bytecode
-	sv.gvm = new vm_s( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue("vm_game") );
+	sv.gvm = VMFactory::createVM(VMI_NATIVE, "game", SV_GameSystemCalls);
 	SV_InitGameVM( false );
 }
 

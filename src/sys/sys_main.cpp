@@ -552,11 +552,7 @@ Sys_LoadGameDll
 Used to load a development dll instead of a virtual machine
 =================
 */
-using Entry = void (*)(intptr_t (*syscallptr)(intptr_t, ...));
-using EntryPoint = intptr_t (QDECL *)(int, ...);
-using SysCalls = intptr_t (*)(intptr_t, ...);
-
-void *Sys_LoadGameDll(const char *name, EntryPoint* entryPoint, SysCalls systemcalls)
+void *Sys_LoadGameDll(const char *name, EntryPoint* entryPoint, SystemCalls systemcalls)
 {
     void *libHandle;
 

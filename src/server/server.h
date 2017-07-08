@@ -84,7 +84,7 @@ struct configString_t {
 
 struct server_t {
 
-    vm_t *gvm;				// game virtual machine
+    VM *gvm;				// game virtual machine
 
     serverState_t state;
     bool restarting;  // if true, send configstring changes during SS_LOADING

@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // vm_x86.c -- load time compiler and execution environment for x86
 
 #include "vm.h"
-#include "vm_local.h"
 
 #ifdef _WIN32
   #include <windows.h>
@@ -422,7 +421,6 @@ static void DoSyscall(void)
 	{
 		int *data, *ret;
 #if idx64
-		int index;
 		intptr_t args[MAX_VMSYSCALL_ARGS];
 #endif
 		
@@ -431,8 +429,8 @@ static void DoSyscall(void)
 
 #if idx64
 		args[0] = ~vm_syscallNum;
-		for(index = 1; index < ARRAY_LEN(args); index++)
-			args[index] = data[index];
+		for(int i = 1; i < ARRAY_LEN(args); i++)
+			args[i] = data[i];
 			
 		*ret = savedVM->systemCall(args);
 #else

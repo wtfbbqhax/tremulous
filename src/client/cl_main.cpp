@@ -133,7 +133,6 @@ cvar_t *cl_rsaAuth;
 clientActive_t cl;
 clientConnection_t clc;
 clientStatic_t cls;
-vm_t *cgvm;
 
 char cl_reconnectArgs[MAX_OSPATH];
 char cl_oldGame[MAX_QPATH];

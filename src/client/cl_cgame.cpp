@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "libmumblelink.h"
 #endif
 
+VM *cgvm;
 int cgInterface;
 
 /*
@@ -411,6 +412,8 @@ The cgame module is making a system call
 */
 intptr_t CL_CgameSystemCalls( intptr_t *args )
 {
+#define	VMA(x) cgvm->ArgPtr(args[x])
+
 	if( cgInterface == 2 && args[0] >= CG_R_SETCLIPREGION && args[0] < CG_MEMSET )
     {
 		if( args[0] < CG_S_STOPBACKGROUNDTRACK - 1 )
@@ -777,84 +780,84 @@ CL_InitCGame
 Should only be called by CL_StartHunkUsers
 ====================
 */
-void CL_InitCGame( void ) {
-	const char			*info;
-	const char			*mapname;
-	int					t1, t2;
-	char				backup[ MAX_STRING_CHARS ];
-	vmInterpret_t		interpret;
+void CL_InitCGame( void )
+{
+    const char *info;
+    const char *mapname;
+    int t1, t2;
+    char backup[ MAX_STRING_CHARS ];
 
-	t1 = Sys_Milliseconds();
+    t1 = Sys_Milliseconds();
 
-	// find the current mapname
-	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	mapname = Info_ValueForKey( info, "mapname" );
-	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
+    // find the current mapname
+    info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
+    mapname = Info_ValueForKey( info, "mapname" );
+    Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
-	// load the dll or bytecode
-	interpret = (vmInterpret_t)Cvar_VariableValue("vm_cgame");
-	if(cl_connectedToPureServer)
-	{
-		// if sv_pure is set we only allow qvms to be loaded
-		if(interpret != VMI_COMPILED && interpret != VMI_BYTECODE)
-			interpret = VMI_COMPILED;
-	}
-
-	cgvm = new vm_s( "cgame", CL_CgameSystemCalls, interpret );
-	clc.state = CA_LOADING;
-
-	Cvar_VariableStringBuffer( "cl_voipSendTarget", backup, sizeof( backup ) );
-	Cvar_Set( "cl_voipSendTarget", "" );
-	cgInterface = 0;
-	probingCG = true;
-	if ( setjmp( cgProbingJB ) == 0 )
+    // load the dll or bytecode
+    VMType interpret = (VMType)Cvar_VariableValue("vm_cgame");
+    if(cl_connectedToPureServer)
     {
-		cgvm->Call( CG_VOIP_STRING );
-	}
+        // if sv_pure is set we only allow qvms to be loaded
+        if(interpret != VMI_COMPILED && interpret != VMI_BYTECODE)
+            interpret = VMI_COMPILED;
+    }
+
+    cgvm = VMFactory::createVM(interpret, "cgame", CL_CgameSystemCalls);
+    clc.state = CA_LOADING;
+
+    Cvar_VariableStringBuffer( "cl_voipSendTarget", backup, sizeof( backup ) );
+    Cvar_Set( "cl_voipSendTarget", "" );
+    cgInterface = 0;
+    probingCG = true;
+    if ( setjmp( cgProbingJB ) == 0 )
+    {
+        cgvm->Call( CG_VOIP_STRING );
+    }
     else
     {
-		cgvm->ClearCallLevel();
-		cgInterface = 2;
-	}
-	probingCG = false;
+        cgvm->ClearCallLevel();
+        cgInterface = 2;
+    }
+    probingCG = false;
 
-	Cvar_Set( "cl_voipSendTarget", backup );
+    Cvar_Set( "cl_voipSendTarget", backup );
 
-	if ( ( clc.netchan.alternateProtocol == 2 ) != ( cgInterface == 2 ) ) {
-		Com_Error( ERR_DROP, "%s protocol %i, but a cgame module using the %s interface was found",
-		           ( clc.demoplaying ? "Demo was recorded using" : "Server uses" ),
-		           ( clc.netchan.alternateProtocol == 0 ? PROTOCOL_VERSION : clc.netchan.alternateProtocol == 1 ? 70 : 69 ),
-		           ( cgInterface == 2 ? "1.1" : "non-1.1" ) );
-	}
+    if ( ( clc.netchan.alternateProtocol == 2 ) != ( cgInterface == 2 ) ) {
+        Com_Error( ERR_DROP, "%s protocol %i, but a cgame module using the %s interface was found",
+                ( clc.demoplaying ? "Demo was recorded using" : "Server uses" ),
+                ( clc.netchan.alternateProtocol == 0 ? PROTOCOL_VERSION : clc.netchan.alternateProtocol == 1 ? 70 : 69 ),
+                ( cgInterface == 2 ? "1.1" : "non-1.1" ) );
+    }
 
-	// init for this gamestate
-	// use the lastExecutedServerCommand instead of the serverCommandSequence
-	// otherwise server commands sent just before a gamestate are dropped
-	cgvm->Call( CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+    // init for this gamestate
+    // use the lastExecutedServerCommand instead of the serverCommandSequence
+    // otherwise server commands sent just before a gamestate are dropped
+    cgvm->Call( CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
-	// reset any CVAR_CHEAT cvars registered by cgame
-	if ( !clc.demoplaying && !cl_connectedToCheatServer )
-		Cvar_SetCheatState();
+    // reset any CVAR_CHEAT cvars registered by cgame
+    if ( !clc.demoplaying && !cl_connectedToCheatServer )
+        Cvar_SetCheatState();
 
-	// we will send a usercmd this frame, which
-	// will cause the server to send us the first snapshot
-	clc.state = CA_PRIMED;
+    // we will send a usercmd this frame, which
+    // will cause the server to send us the first snapshot
+    clc.state = CA_PRIMED;
 
-	t2 = Sys_Milliseconds();
+    t2 = Sys_Milliseconds();
 
-	Com_Printf( "CL_InitCGame: %5.2f seconds\n", (t2-t1)/1000.0 );
+    Com_Printf( "CL_InitCGame: %5.2f seconds\n", (t2-t1)/1000.0 );
 
-	// have the renderer touch all its images, so they are present
-	// on the card even if the driver does deferred loading
-	re.EndRegistration();
+    // have the renderer touch all its images, so they are present
+    // on the card even if the driver does deferred loading
+    re.EndRegistration();
 
-	// make sure everything is paged in
-	if (!Sys_LowPhysicalMemory()) {
-		Com_TouchMemory();
-	}
+    // make sure everything is paged in
+    if (!Sys_LowPhysicalMemory()) {
+        Com_TouchMemory();
+    }
 
-	// clear anything that got printed
-	Con_ClearNotify ();
+    // clear anything that got printed
+    Con_ClearNotify ();
 }
 
 

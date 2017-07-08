@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "cl_updates.h"
 
-vm_t *uivm;
+VM *uivm;
 int uiInterface;
 
 /*
@@ -761,6 +761,9 @@ The ui module is making a system call
 */
 intptr_t CL_UISystemCalls(intptr_t *args)
 {
+
+#define	VMA(x) uivm->ArgPtr(args[x])
+
     if (uiInterface == 2)
     {
         if (args[0] >= UI_R_SETCLIPREGION && args[0] < UI_MEMSET)
@@ -1205,17 +1208,17 @@ CL_InitUI
 void CL_InitUI(void)
 {
     // load the dll or bytecode
-    vmInterpret_t interpret = (vmInterpret_t)Cvar_VariableValue("vm_ui");
+    VMType interpret = (VMType)Cvar_VariableValue("vm_ui");
     if (cl_connectedToPureServer)
     {
         // if sv_pure is set we only allow qvms to be loaded
         if (interpret != VMI_COMPILED && interpret != VMI_BYTECODE) interpret = VMI_COMPILED;
     }
 
-    uivm = new vm_s("ui", CL_UISystemCalls, interpret);
+    uivm = VMFactory::createVM(interpret, "ui", CL_UISystemCalls);
 
     // sanity check
-    int v = uivm->Call( UI_GETAPIVERSION);
+    int v = uivm->Call(UI_GETAPIVERSION);
     if (v != UI_API_VERSION)
     {
         // Free uivm now, so UI_SHUTDOWN doesn't get called later.

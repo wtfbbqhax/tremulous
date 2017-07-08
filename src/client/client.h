@@ -438,8 +438,8 @@ extern bool cl_oldGameSet;
 
 //=============================================================================
 
-extern vm_t *cgvm;  // interface to cgame dll or vm
-extern vm_t *uivm;  // interface to ui dll or vm
+extern VM *cgvm;  // interface to cgame dll or vm
+extern VM *uivm;  // interface to ui dll or vm
 extern int uiInterface;
 extern refexport_t re;  // interface to refresh .dll
 

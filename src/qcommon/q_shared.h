@@ -122,7 +122,7 @@ extern "C" {
 
 #include "../game/bg_lib.h"
 
-typedef int intptr_t;
+typedef long intptr_t;
 
 #else
 

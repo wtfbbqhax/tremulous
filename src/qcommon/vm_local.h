@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "q_shared.h"
 #include "qcommon.h"
+#include "../sys/sys_shared.h"
+
+//#include <memory>
+//using namespace std;
 
 #ifndef VM_LOCAL_H
 #define VM_LOCAL_H
@@ -44,7 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define PROGRAM_STACK_SIZE 0x10000
 #define PROGRAM_STACK_MASK (PROGRAM_STACK_SIZE - 1)
 
-typedef enum {
+enum opcode_t {
     OP_UNDEF,
 
     OP_IGNORE,
@@ -129,79 +133,134 @@ typedef enum {
 
     OP_CVIF,
     OP_CVFI
-} opcode_t;
-
-typedef int vmptr_t;
-
-typedef struct vmSymbol_s {
-    struct vmSymbol_s *next;
-    int symValue;
-    int profileCount;
-    char symName[1];  // variable sized
-} vmSymbol_t;
+};
 
 #define VM_OFFSET_PROGRAM_STACK 0
 #define VM_OFFSET_SYSTEM_CALL 4
 
-struct vm_s
-{
-    vm_s(const char *module, intptr_t (*systemCalls)(intptr_t *), vmInterpret_t interpret);
-    ~vm_s();
+enum VMType {
+	VMI_NATIVE,
+	VMI_BYTECODE,
+	VMI_COMPILED
+}; 
 
-    intptr_t Call(int callnum, ...);
+using SystemCalls = intptr_t (*)(intptr_t*, ...);
+using SystemCall = intptr_t (*)(intptr_t*);
 
-    void ClearCallLevel() { callLevel = 0; }
-    void* ArgPtr(intptr_t intValue);
+struct vm_s {
 
-    const char* ValueToSymbol(int value);
-    vmSymbol_t* ValueToFunctionSymbol(int value);
-    int SymbolToValue(const char* symbol);
+    void clear() {
+        ::memset(this, 0, sizeof(*this));
+    }
 
-    void LoadSymbols(void);
+    void free() {
+        if (destroy) destroy(this); // This will call VM_Destroy_Compiled()
+        if (dllHandle) Sys_UnloadDll(dllHandle);
+        if ( dataBase ) delete dataBase;
+        if ( instructionPointers ) delete instructionPointers;
+        this->clear();
+    }
 
-// DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
-// USED BY THE ASM CODE
-    int programStack = 0;  // the vm may be recursively entered
-    intptr_t (*systemCall)(intptr_t *parms) = nullptr;
+    // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
+    // USED BY THE ASM CODE
+    int programStack;  // the vm may be recursively entered
+    SystemCalls systemCall;
 
     //------------------------------------
 
     char name[MAX_QPATH];
-    void *searchPath = nullptr;  // hint for FS_ReadFileDir()
+    void *searchPath;  // hint for FS_ReadFileDir()
 
     // for dynamic linked modules
-    void *dllHandle = nullptr;
-    intptr_t(QDECL *entryPoint)(int callNum, ...) = nullptr;
-    void (*destroy)(vm_t *self) = nullptr;
+    void *dllHandle;
+    intptr_t(QDECL *entryPoint)(int callNum, ...);
+    void (*destroy)(vm_t *self);
 
     // for interpreted modules
     bool currentlyInterpreting;
 
     bool compiled;
-    byte *codeBase = nullptr;
-    int entryOfs = 0;
-    int codeLength = 0;
+    byte *codeBase;
+    int entryOfs;
+    int codeLength;
 
-    intptr_t *instructionPointers = nullptr;
-    int instructionCount = 0;
+    intptr_t *instructionPointers;
+    int instructionCount;
 
-    byte *dataBase = nullptr;
-    int dataMask = 0;
+    byte *dataBase;
+    int dataMask;
 
-    int stackBottom = 0;  // if programStack < stackBottom, error
+    int stackBottom;  // if programStack < stackBottom, error
 
-    int numSymbols = 0;
-    struct vmSymbol_s *symbols = nullptr;
+    int numSymbols;
+    struct vmSymbol_s *symbols;
 
-    int callLevel = 0;  // counts recursive VM_Call
-    int breakFunction = 0;  // increment breakCount on function entry to this
-    int breakCount = 0;
+    int callLevel;  // counts recursive VM_Call
+    int breakFunction;  // increment breakCount on function entry to this
+    int breakCount;
 
-    byte *jumpTableTargets = nullptr;
-    int numJumpTableTargets = 0;
+    byte *jumpTableTargets;
+    int numJumpTableTargets;
 };
 
-extern vm_t *currentVM;
+class VM {
+public:
+    VM() {
+        vm.clear();
+    }
+
+    ~VM() {
+        vm.free();
+    }
+
+    void ClearCallLevel() {
+        vm.callLevel = 0;
+    }
+
+    virtual intptr_t Call(int callnum, ...) = 0;
+    virtual void* ArgPtr(intptr_t intValue) = 0;
+
+    vm_s vm;
+};
+
+class NativeVM : public VM {
+public:
+    NativeVM(const char * module, SystemCalls systemCalls);
+    ~NativeVM();
+    intptr_t Call(int callnum, ...) override;
+    void* ArgPtr(intptr_t intvalue) override;
+};
+
+class BytecodeVM : public VM {
+public:
+    BytecodeVM(const char * module, SystemCalls systemCalls);
+    ~BytecodeVM();
+    intptr_t Call(int callnum, ...) override;
+    void* ArgPtr(intptr_t intvalue) override;
+};
+
+#ifndef NO_VM_COMPILED
+class CompiledVM : public VM {
+public:
+    CompiledVM(const char * module, SystemCalls systemCalls);
+    ~CompiledVM();
+    intptr_t Call(int callnum, ...) override;
+    void* ArgPtr(intptr_t intvalue) override;
+};
+#endif
+
+class VMFactory {
+public:
+    //static uniq_ptr<vm_s> createVM(VMType type, const char* module, SystemCalls syscalls) {
+    static VM* createVM(VMType type, const char* module, SystemCall syscalls) {
+        switch(type) {
+        case VMI_NATIVE: return new NativeVM(module, syscalls);
+        case VMI_COMPILED: return new CompiledVM(module, syscalls);
+        case VMI_BYTECODE: return new BytecodeVM(module, syscalls);
+        }
+    }
+};
+
 extern int vm_debugLevel;
 
 void VM_Compile(vm_t *vm, vmHeader_t *header);

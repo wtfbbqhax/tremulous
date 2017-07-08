@@ -1,4 +1,4 @@
-#include "vm_local.h"
+#include "vm.h"
 
 int VM_CallCompiled( vm_t *vm, int *args ) {
 	exit(99);

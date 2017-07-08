@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 #include "vm.h"
-#include "vm_local.h"
 
 //#define	DEBUG_VM
 #ifdef DEBUG_VM
@@ -156,7 +155,7 @@ void VM_StackTrace( vm_t *vm, int programCounter, int programStack ) {
 
 	count = 0;
 	do {
-		Com_Printf( "%s\n", vm->ValueToSymbol( programCounter ) );
+		//Com_Printf( "%s\n", vm->ValueToSymbol( programCounter ) );
 		programStack =  *(int *)&vm->dataBase[programStack+4];
 		programCounter = *(int *)&vm->dataBase[programStack];
 	} while ( programCounter != -1 && ++count < 32 );
