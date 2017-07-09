@@ -308,7 +308,7 @@ intptr_t NativeVM::Call(int callnum, ...)
     vm.callLevel++;
 
     // if we have a dll loaded, call it directly
-    assert(entryPoint);
+    assert(vm.entryPoint);
 
     int args[MAX_VMMAIN_ARGS - 1];
     va_list ap;
