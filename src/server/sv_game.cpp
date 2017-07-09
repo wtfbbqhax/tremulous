@@ -567,7 +567,8 @@ void SV_RestartGameProgs( void ) {
 	// do a restart instead of a free
 	//sv.gvm = VM_Restart(sv.gvm, true);
     delete sv.gvm;
-	sv.gvm = VMFactory::createVM(VMI_NATIVE, "game", SV_GameSystemCalls);
+    VMType interpret = (VMType)Cvar_VariableValue("vm_game");
+	sv.gvm = VMFactory::createVM(interpret, "game", SV_GameSystemCalls);
 
 	SV_InitGameVM( true );
 }
@@ -583,7 +584,8 @@ Called on a normal map change, not on a map_restart
 void SV_InitGameProgs( void )
 {
 	// load the dll or bytecode
-	sv.gvm = VMFactory::createVM(VMI_NATIVE, "game", SV_GameSystemCalls);
+    VMType interpret = (VMType)Cvar_VariableValue("vm_game");
+	sv.gvm = VMFactory::createVM(interpret, "game", SV_GameSystemCalls);
 	SV_InitGameVM( false );
 }
 
