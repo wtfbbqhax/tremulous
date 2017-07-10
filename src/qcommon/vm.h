@@ -1,9 +1,9 @@
 #ifndef QCOMMON_VM_H
 #define QCOMMON_VM_H 1
 
+#include "../sys/sys_shared.h"
 #include "q_shared.h"
 #include "qcommon.h"
-#include "../sys/sys_shared.h"
 
 /*
 ==============================================================
@@ -14,21 +14,21 @@ VIRTUAL MACHINE
 */
 
 typedef enum {
-	TRAP_MEMSET = 100,
-	TRAP_MEMCPY,
-	TRAP_STRNCPY,
-	TRAP_SIN,
-	TRAP_COS,
-	TRAP_ATAN2,
-	TRAP_SQRT,
-	TRAP_MATRIXMULTIPLY,
-	TRAP_ANGLEVECTORS,
-	TRAP_PERPENDICULARVECTOR,
-	TRAP_FLOOR,
-	TRAP_CEIL,
+    TRAP_MEMSET = 100,
+    TRAP_MEMCPY,
+    TRAP_STRNCPY,
+    TRAP_SIN,
+    TRAP_COS,
+    TRAP_ATAN2,
+    TRAP_SQRT,
+    TRAP_MATRIXMULTIPLY,
+    TRAP_ANGLEVECTORS,
+    TRAP_PERPENDICULARVECTOR,
+    TRAP_FLOOR,
+    TRAP_CEIL,
 
-	TRAP_TESTPRINTINT,
-	TRAP_TESTPRINTFLOAT
+    TRAP_TESTPRINTINT,
+    TRAP_TESTPRINTFLOAT
 } sharedTraps_t;
 
 // Max number of arguments to pass from engine to vm's vmMain function.
@@ -139,21 +139,13 @@ enum opcode_t {
 #define VM_OFFSET_PROGRAM_STACK 0
 #define VM_OFFSET_SYSTEM_CALL 4
 
-enum VMType {
-	VMI_NATIVE,
-	VMI_BYTECODE,
-	VMI_COMPILED
-}; 
+enum VMType { VMI_NATIVE, VMI_BYTECODE, VMI_COMPILED };
 
 using SystemCalls = intptr_t (*)(intptr_t, ...);
-using SystemCall = intptr_t (*)(intptr_t*);
+using SystemCall = intptr_t (*)(intptr_t *);
 
 struct vm_t {
-
-    void clear() {
-        ::memset(this, 0, sizeof(*this));
-    }
-
+    void clear() { ::memset(this, 0, sizeof(*this)); }
     void free();
 
     // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
@@ -203,58 +195,54 @@ extern vm_t *lastVM;
 
 class VM {
 public:
-    VM() {
-        vm.clear();
-    }
-
-    ~VM() {
-        vm.free();
-    }
-
-    void ClearCallLevel() {
-        vm.callLevel = 0;
-    }
-
+    VM() { vm.clear(); }
+    ~VM() { vm.free(); }
+    void ClearCallLevel() { vm.callLevel = 0; }
     virtual intptr_t Call(int callnum, ...) = 0;
-    virtual void* ArgPtr(intptr_t intValue) = 0;
+    virtual void *ArgPtr(intptr_t intValue) = 0;
 
     vm_t vm;
 };
 
 class NativeVM : public VM {
 public:
-    NativeVM(const char * module, SystemCall systemCalls);
+    NativeVM(const char *module, SystemCall systemCalls);
     ~NativeVM();
     intptr_t Call(int callnum, ...) override;
-    void* ArgPtr(intptr_t intvalue) override;
+    void *ArgPtr(intptr_t intvalue) override;
 };
 
 class BytecodeVM : public VM {
 public:
-    BytecodeVM(const char * module, SystemCall systemCalls);
+    BytecodeVM(const char *module, SystemCall systemCalls);
     ~BytecodeVM();
     intptr_t Call(int callnum, ...) override;
-    void* ArgPtr(intptr_t intvalue) override;
+    void *ArgPtr(intptr_t intvalue) override;
 };
 
 #ifndef NO_VM_COMPILED
 class CompiledVM : public VM {
 public:
-    CompiledVM(const char * module, SystemCall systemCalls);
+    CompiledVM(const char *module, SystemCall systemCalls);
     ~CompiledVM();
     intptr_t Call(int callnum, ...) override;
-    void* ArgPtr(intptr_t intvalue) override;
+    void *ArgPtr(intptr_t intvalue) override;
 };
 #endif
 
 class VMFactory {
 public:
-    //static uniq_ptr<vm_t> createVM(VMType type, const char* module, SystemCalls syscalls) {
-    static VM* createVM(VMType type, const char* module, SystemCall syscalls) {
-        switch(type) {
-        case VMI_NATIVE: return new NativeVM(module, syscalls);
-        case VMI_COMPILED: return new CompiledVM(module, syscalls);
-        case VMI_BYTECODE: return new BytecodeVM(module, syscalls);
+    // static uniq_ptr<vm_t> createVM(VMType type, const char* module, SystemCalls syscalls) {
+    static VM *createVM(VMType type, const char *module, SystemCall syscalls)
+    {
+        switch (type)
+        {
+            case VMI_NATIVE:
+                return new NativeVM(module, syscalls);
+            case VMI_COMPILED:
+                return new CompiledVM(module, syscalls);
+            case VMI_BYTECODE:
+                return new BytecodeVM(module, syscalls);
         }
     }
 };
@@ -271,18 +259,18 @@ void VM_LogSyscalls(int *args);
 
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n);
 
-void	VM_Init( void );
+void VM_Init(void);
 
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
-void	VM_Debug( int level );
+void VM_Debug(int level);
 
-#define	VMA(x) VM_ArgPtr(args[x])
+#define VMA(x) VM_ArgPtr(args[x])
 static ID_INLINE float _vmf(intptr_t x)
 {
-	floatint_t fi;
-	fi.i = (int) x;
-	return fi.f;
+    floatint_t fi;
+    fi.i = (int)x;
+    return fi.f;
 }
-#define	VMF(x)	_vmf(args[x])
+#define VMF(x) _vmf(args[x])
 
 #endif

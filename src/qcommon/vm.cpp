@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //
 // intermix code and data symbol table
-// 
+//
 // a dll has one imported function: VM_SystemCall
 // and one exported function: Perform
 //
@@ -37,7 +37,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 int vm_debugLevel;
 void VM_Debug(int level) { vm_debugLevel = level; }
-
 vm_t *currentVM = nullptr;
 vm_t *lastVM = nullptr;
 
@@ -106,7 +105,7 @@ static intptr_t QDECL VM_DllSyscall(intptr_t arg, ...)
 #endif
 }
 
-static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
+static vmHeader_t *VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
 {
     int dataLength;
     int i;
@@ -171,15 +170,15 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     else
     {
         FS_FreeFile(header.v);
-        Com_Printf(S_COLOR_YELLOW
-                "Warning: %s does not have a recognisable magic number in its header\n",
-                filename);
+        Com_Printf(S_COLOR_YELLOW "Warning: %s does not have a recognisable magic number in its header\n", filename);
         return nullptr;
     }
 
     // round up to next power of 2 so all data operations can be mask protected
     dataLength = header.h->dataLength + header.h->litLength + header.h->bssLength;
-    for (i = 0; dataLength > (1 << i); i++); dataLength = 1 << i;
+    for (i = 0; dataLength > (1 << i); i++)
+        ;
+    dataLength = 1 << i;
 
     if (alloc)
     {
@@ -193,9 +192,7 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         if (vm->dataMask + 1 != dataLength)
         {
             FS_FreeFile(header.v);
-            Com_Printf(S_COLOR_YELLOW 
-                    "Warning: Data region size of %s not matching after VM_Restart()\n",
-                    filename);
+            Com_Printf(S_COLOR_YELLOW "Warning: Data region size of %s not matching after VM_Restart()\n", filename);
             return nullptr;
         }
 
@@ -203,9 +200,7 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     }
 
     // copy the intialized data
-    ::memcpy(vm->dataBase,
-            (byte*) header.h + header.h->dataOffset,
-            header.h->dataLength + header.h->litLength);
+    ::memcpy(vm->dataBase, (byte *)header.h + header.h->dataOffset, header.h->dataLength + header.h->litLength);
 
     // byte swap the longs
     for (i = 0; i < header.h->dataLength; i += 4)
@@ -232,9 +227,7 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
             {
                 FS_FreeFile(header.v);
 
-                Com_Printf(S_COLOR_YELLOW
-                        "Warning: Jump table size of %s not matching after VM_Restart()\n",
-                        filename);
+                Com_Printf(S_COLOR_YELLOW "Warning: Jump table size of %s not matching after VM_Restart()\n", filename);
                 return nullptr;
             }
 
@@ -242,8 +235,7 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
         }
 
         ::memcpy(vm->jumpTableTargets,
-                (byte*) header.h + header.h->dataOffset + header.h->dataLength + header.h->litLength,
-                header.h->jtrgLength);
+            (byte *)header.h + header.h->dataOffset + header.h->dataLength + header.h->litLength, header.h->jtrgLength);
 
         // byte swap the longs
         for (i = 0; i < header.h->jtrgLength; i += 4)
@@ -255,20 +247,19 @@ static vmHeader_t* VM_LoadQVM(vm_t *vm, bool alloc, bool unpure)
     return header.h;
 }
 
-void vm_t::free() {
-    if (destroy) destroy(this); // This will call VM_Destroy_Compiled()
+void vm_t::free()
+{
+    if (destroy) destroy(this);  // This will call VM_Destroy_Compiled()
     if (dllHandle) Sys_UnloadDll(dllHandle);
-    if ( dataBase ) delete dataBase;
-    if ( instructionPointers ) delete instructionPointers;
+    if (dataBase) delete dataBase;
+    if (instructionPointers) delete instructionPointers;
     this->clear();
 }
 
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 {
-    if ( (dest & currentVM->dataMask) != dest
-      || (src & currentVM->dataMask) != src
-      || ((dest + n) & currentVM->dataMask) != dest + n
-      || ((src + n) & currentVM->dataMask) != src + n )
+    if ((dest & currentVM->dataMask) != dest || (src & currentVM->dataMask) != src ||
+        ((dest + n) & currentVM->dataMask) != dest + n || ((src + n) & currentVM->dataMask) != src + n)
     {
         Com_Error(ERR_DROP, "OP_BLOCK_COPY out of range!");
     }
@@ -277,24 +268,24 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 }
 
 //=================================================================
-NativeVM::NativeVM(const char * module, SystemCall systemCalls) : VM()
+NativeVM::NativeVM(const char *module, SystemCall systemCalls) : VM()
 {
     void *startSearch = nullptr;
     int retval;
 
     Q_strncpyz(vm.name, module, sizeof(vm.name));
 
-    do {
+    do
+    {
         char filename[MAX_OSPATH];
         retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, true);
 
-        if ( retval != VMI_NATIVE )
-            continue;
+        if (retval != VMI_NATIVE) continue;
 
         vm.dllHandle = Sys_LoadGameDll(filename, &vm.entryPoint, VM_DllSyscall);
-    } while ( retval >= 0 );
+    } while (retval >= 0);
 
-    if ( !vm.dllHandle ) throw "Error";
+    if (!vm.dllHandle) throw "Error";
 
     vm.systemCall = systemCalls;
 }
@@ -314,51 +305,48 @@ intptr_t NativeVM::Call(int callnum, ...)
     va_list ap;
 
     va_start(ap, callnum);
-    for (unsigned i = 0; i < ARRAY_LEN(args); i++)
-        args[i] = va_arg(ap, int);
+    for (unsigned i = 0; i < ARRAY_LEN(args); i++) args[i] = va_arg(ap, int);
     va_end(ap);
 
     intptr_t r = vm.entryPoint(callnum, args[0], args[1], args[2]);
     vm.callLevel--;
 
-    if ( oldVM ) currentVM = oldVM;
+    if (oldVM) currentVM = oldVM;
 
     return r;
 }
 
-void* NativeVM::ArgPtr(intptr_t intvalue)
+void *NativeVM::ArgPtr(intptr_t intvalue)
 {
     if (!intvalue) return nullptr;
-    return (void*)(vm.dataBase + intvalue);
+    return (void *)(vm.dataBase + intvalue);
 }
 
 //=================================================================
-BytecodeVM::BytecodeVM(const char * module, SystemCall systemCalls) : VM()
+BytecodeVM::BytecodeVM(const char *module, SystemCall systemCalls) : VM()
 {
-    vmHeader_t* header;
+    vmHeader_t *header;
     void *startSearch = nullptr;
     int retval;
 
     Q_strncpyz(vm.name, module, sizeof(vm.name));
 
-    do {
+    do
+    {
         char filename[MAX_OSPATH];
 
         retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, false);
 
-        if ( retval != VMI_COMPILED )
-            continue;
+        if (retval != VMI_COMPILED) continue;
 
         vm.searchPath = startSearch;
         header = VM_LoadQVM(&vm, true, false);
-        if ( header )
-            break;
+        if (header) break;
 
         Q_strncpyz(vm.name, module, sizeof(vm.name));
     } while (retval >= 0);
 
-    if (retval < 0)
-        throw "Error";
+    if (retval < 0) throw "Error";
 
     vm.systemCall = systemCalls;
     vm.instructionCount = header->instructionCount;
@@ -389,52 +377,49 @@ intptr_t BytecodeVM::Call(int callnum, ...)
 
     va_list ap;
     va_start(ap, callnum);
-    for (unsigned i = 0; i < ARRAY_LEN(a.args); i++)
-        a.args[i] = va_arg(ap, int);
+    for (unsigned i = 0; i < ARRAY_LEN(a.args); i++) a.args[i] = va_arg(ap, int);
     va_end(ap);
 
     r = VM_CallInterpreted(&vm, &a.callnum);
     vm.callLevel--;
 
-    if ( oldVM ) currentVM = oldVM;
+    if (oldVM) currentVM = oldVM;
 
     return r;
 }
 
-void* BytecodeVM::ArgPtr(intptr_t intvalue)
+void *BytecodeVM::ArgPtr(intptr_t intvalue)
 {
     if (!intvalue) return nullptr;
-    return (void*)(vm.dataBase + (intvalue & vm.dataMask));
+    return (void *)(vm.dataBase + (intvalue & vm.dataMask));
 }
 
 //=================================================================
 #ifndef NO_VM_COMPILED
-CompiledVM::CompiledVM(const char * module, SystemCall systemCalls) : VM()
+CompiledVM::CompiledVM(const char *module, SystemCall systemCalls) : VM()
 {
-    vmHeader_t* header;
-    void* startSearch = nullptr;
+    vmHeader_t *header;
+    void *startSearch = nullptr;
     int retval;
 
     Q_strncpyz(vm.name, module, sizeof(vm.name));
 
-    do {
+    do
+    {
         char filename[MAX_OSPATH];
 
         retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, false);
-        if ( retval != VMI_COMPILED )
-            continue;
+        if (retval != VMI_COMPILED) continue;
 
         vm.searchPath = startSearch;
         header = VM_LoadQVM(&vm, true, false);
-        if ( header )
-            break;
+        if (header) break;
 
         // VM_Free overwrites the name on failed load
         Q_strncpyz(vm.name, module, sizeof(vm.name));
-    } while ( retval >= 0 );
+    } while (retval >= 0);
 
-    if (retval < 0)
-        throw "Error";
+    if (retval < 0) throw "Error";
 
     vm.systemCall = systemCalls;
     vm.instructionCount = header->instructionCount;
@@ -458,7 +443,7 @@ intptr_t CompiledVM::Call(int callnum, ...)
     intptr_t r = VM_CallCompiled(&vm, (int *)&callnum);
     vm.callLevel--;
 
-    if ( oldVM ) currentVM = oldVM;
+    if (oldVM) currentVM = oldVM;
 
     return r;
 #else
@@ -473,23 +458,21 @@ intptr_t CompiledVM::Call(int callnum, ...)
 
     va_list ap;
     va_start(ap, callnum);
-    for (unsigned i = 0; i < ARRAY_LEN(a.args); i++)
-        a.args[i] = va_arg(ap, int);
+    for (unsigned i = 0; i < ARRAY_LEN(a.args); i++) a.args[i] = va_arg(ap, int);
     va_end(ap);
 
     intptr_t r = VM_CallCompiled(&vm, &a.callnum);
     vm.callLevel--;
 
-    if ( oldVM ) currentVM = oldVM;
+    if (oldVM) currentVM = oldVM;
 
     return r;
 #endif
 }
 
-void* CompiledVM::ArgPtr(intptr_t intvalue)
+void *CompiledVM::ArgPtr(intptr_t intvalue)
 {
     if (!intvalue) return nullptr;
-    return (void*)(vm.dataBase + (intvalue & vm.dataMask));
+    return (void *)(vm.dataBase + (intvalue & vm.dataMask));
 }
 #endif
-
