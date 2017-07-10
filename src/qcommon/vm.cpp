@@ -38,8 +38,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 int vm_debugLevel;
 void VM_Debug(int level) { vm_debugLevel = level; }
 
-vm_t *currentVM;
-vm_t *lastVM;
+vm_t *currentVM = nullptr;
+vm_t *lastVM = nullptr;
 
 void VM_Init(void)
 {
