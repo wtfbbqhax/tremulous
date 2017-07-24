@@ -68,7 +68,7 @@ static void SV_Netchan_Encode( client_t *client, msg_t *msg ) {
 		// modify the key with the last received and with this message acknowledged client command
 		if (!string[index])
 			index = 0;
-		if ( string[index] > 127 || (client->netchan.alternateProtocol == 2 && string[index] == '%'))
+		if ( string[index] > 127 || (client->protocol() == 2 && string[index] == '%'))
         {
 			key ^= '.' << (i & 1);
 		}
@@ -121,7 +121,7 @@ static void SV_Netchan_Decode( client_t *client, msg_t *msg ) {
 		// modify the key with the last sent and acknowledged server command
 		if (!string[index])
 			index = 0;
-		if (string[index] > 127 || (client->netchan.alternateProtocol == 2 && string[index] == '%')) {
+		if (string[index] > 127 || (client->protocol() == 2 && string[index] == '%')) {
 			key ^= '.' << (i & 1);
 		}
 		else {
@@ -234,7 +234,7 @@ void SV_Netchan_Transmit( client_t *client, msg_t *msg)
 	}
 	else
 	{
-		if (client->netchan.alternateProtocol != 0)
+		if (client->protocol() != 0)
 			SV_Netchan_Encode( client, msg );
 		Netchan_Transmit( &client->netchan, msg->cursize, msg->data );
 	}
@@ -250,7 +250,7 @@ bool SV_Netchan_Process( client_t *client, msg_t *msg )
 	bool ret = Netchan_Process( &client->netchan, msg );
 	if (!ret) return false;
 
-	if (client->netchan.alternateProtocol != 0)
+	if (client->protocol() != 0)
 		SV_Netchan_Decode( client, msg );
 
 	return true;

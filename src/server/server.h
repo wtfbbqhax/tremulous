@@ -140,6 +140,20 @@ struct netchan_buffer_t {
 };
 
 struct client_t {
+
+    int protocol() { return netchan.alternateProtocol; }
+    void CloseDownload();
+    void EnterWorld(usercmd_t*);
+    void AddServerCommand(const char *cmd );
+    void Drop(const char *reason);
+    void Free();
+    void SendGameState();
+    void UserinfoChanged();
+    int WriteDownloadToClient(msg_t *msg);
+#ifdef USE_VOIP
+    void UpdateVoipIgnore(const char*, bool);
+#endif
+
     clientState_t state;
     char userinfo[MAX_INFO_STRING];  // name, etc
 
@@ -349,16 +363,12 @@ void SV_GetChallenge(netadr_t from);
 void SV_DirectConnect(netadr_t from);
 
 void SV_ExecuteClientMessage(client_t *cl, msg_t *msg);
-void SV_UserinfoChanged(client_t *cl);
 
 void SV_ClientEnterWorld(client_t *client, usercmd_t *cmd);
-void SV_FreeClient(client_t *client);
-void SV_DropClient(client_t *drop, const char *reason);
 
 void SV_ExecuteClientCommand(client_t *cl, const char *s, bool clientOK);
 void SV_ClientThink(client_t *cl, usercmd_t *cmd);
 
-int SV_WriteDownloadToClient(client_t *cl, msg_t *msg);
 int SV_SendDownloadMessages(void);
 int SV_SendQueuedMessages(void);
 
@@ -370,7 +380,6 @@ void SV_Heartbeat_f(void);
 //
 // sv_snapshot.c
 //
-void SV_AddServerCommand(client_t *client, const char *cmd);
 void SV_UpdateServerCommandsToClient(client_t *client, msg_t *msg);
 void SV_WriteFrameToClient(client_t *client, msg_t *msg);
 void SV_SendMessageToClient(msg_t *msg, client_t *client);

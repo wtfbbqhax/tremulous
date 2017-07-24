@@ -193,26 +193,26 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		// add the map_restart command
-		SV_AddServerCommand( client, "map_restart\n" );
+		client->AddServerCommand("map_restart\n" );
 
 		// connect the client again, without the firstTime flag
 		denied = (char*)VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, i, false ) );
 		if ( denied ) {
 			// this generally shouldn't happen, because the client
 			// was connected before the level change
-			SV_DropClient( client, denied );
+			client->Drop(denied);
 			Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
 			continue;
 		}
 
 		if(client->state == CS_ACTIVE)
-			SV_ClientEnterWorld(client, &client->lastUsercmd);
+			client->EnterWorld(&client->lastUsercmd);
 		else
 		{
 			// If we don't reset client->lastUsercmd and are restarting during map load,
 			// the client will hang because we'll use the last Usercmd from the previous map,
 			// which is wrong obviously.
-			SV_ClientEnterWorld(client, NULL);
+			client->EnterWorld(nullptr);
 		}
 	}	
 

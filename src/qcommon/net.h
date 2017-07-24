@@ -93,7 +93,7 @@ void NET_Sleep(int msec);
 Netchan handles packet fragmentation and out of order / duplicate suppression
 */
 
-typedef struct {
+struct netchan_t {
     netsrc_t sock;
 
     int dropped;  // between last packet and previous
@@ -121,7 +121,7 @@ typedef struct {
     int challenge;
     int lastSentTime;
     int lastSentSize;
-} netchan_t;
+};
 
 void Netchan_Init(int qport);
 void Netchan_Setup(

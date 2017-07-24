@@ -135,35 +135,33 @@ The given command will be transmitted to the client, and is guaranteed to
 not have future snapshot_t executed before it is executed
 ======================
 */
-void SV_AddServerCommand( client_t *client, const char *cmd ) {
-	int		index, i;
-
-	// this is very ugly but it's also a waste to for instance send multiple config string updates
-	// for the same config string index in one snapshot
-//	if ( SV_ReplacePendingServerCommands( client, cmd ) ) {
-//		return;
-//	}
-
+void client_t::AddServerCommand(const char *cmd )
+{
 	// do not send commands until the gamestate has been sent
-	if( client->state < CS_PRIMED )
-		return;
+	if( state < CS_PRIMED ) return;
 
-	client->reliableSequence++;
+	reliableSequence++;
+
 	// if we would be losing an old command that hasn't been acknowledged,
 	// we must drop the connection
 	// we check == instead of >= so a broadcast print added by SV_DropClient()
 	// doesn't cause a recursive drop client
-	if ( client->reliableSequence - client->reliableAcknowledge == MAX_RELIABLE_COMMANDS + 1 ) {
+	if ( reliableSequence - reliableAcknowledge == MAX_RELIABLE_COMMANDS + 1 )
+    {
 		Com_Printf( "===== pending server commands =====\n" );
-		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
-			Com_Printf( "cmd %5d: %s\n", i, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
-		}
-		Com_Printf( "cmd %5d: %s\n", i, cmd );
-		SV_DropClient( client, "Server command overflow" );
+
+        int i;
+		for ( i = reliableAcknowledge + 1 ; i <= reliableSequence ; i++ )
+			Com_Printf("cmd %5d: %s\n", i, reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)] );
+
+		Com_Printf("cmd %5d: %s\n", i, cmd);
+
+		Drop("Server command overflow");
 		return;
 	}
-	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
+
+	int i = reliableSequence & (MAX_RELIABLE_COMMANDS - 1);
+	Q_strncpyz( reliableCommands[i], cmd, sizeof(reliableCommands[i]) );
 }
 
 /*
@@ -175,7 +173,8 @@ the client game module: "cp", "print", "chat", etc
 A NULL client will broadcast to all clients
 =================
 */
-void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
+void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...)
+{
 	va_list		argptr;
 	byte		message[MAX_MSGLEN];
 	client_t	*client;
@@ -202,7 +201,7 @@ void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
 	}
 
 	if ( cl != NULL ) {
-		SV_AddServerCommand( cl, (char *)message );
+		cl->AddServerCommand((char *)message );
 		return;
 	}
 
@@ -213,7 +212,7 @@ void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
 
 	// send the data to all relevent clients
 	for (j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++) {
-		SV_AddServerCommand( client, (char *)message );
+		client->AddServerCommand((char *)message );
 	}
 }
 
@@ -963,8 +962,9 @@ static void SV_CheckTimeouts( void ) {
 		if ( cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint) {
 			// wait several frames so a debugger session doesn't
 			// cause a timeout
-			if ( ++cl->timeoutCount > 5 ) {
-				SV_DropClient (cl, "timed out"); 
+			if ( ++cl->timeoutCount > 5 )
+            {
+				cl->Drop("timed out");
 				cl->state = CS_FREE;	// don't bother with zombie state
 			}
 		} else {

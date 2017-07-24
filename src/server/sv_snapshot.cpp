@@ -215,15 +215,15 @@ static void SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
     // delta encode the playerstate
     if (oldframe)
     {
-        MSG_WriteDeltaPlayerstate(client->netchan.alternateProtocol, msg, &oldframe->ps, &frame->ps);
+        MSG_WriteDeltaPlayerstate(client->protocol(), msg, &oldframe->ps, &frame->ps);
     }
     else
     {
-        MSG_WriteDeltaPlayerstate(client->netchan.alternateProtocol, msg, NULL, &frame->ps);
+        MSG_WriteDeltaPlayerstate(client->protocol(), msg, NULL, &frame->ps);
     }
 
     // delta encode the entities
-    SV_EmitPacketEntities(client->netchan.alternateProtocol, oldframe, frame, msg);
+    SV_EmitPacketEntities(client->protocol(), oldframe, frame, msg);
 
     // padding for rate debugging
     if (sv_padPackets->integer)
@@ -616,15 +616,15 @@ static void SV_WriteVoipToClient(client_t *cl, msg_t *msg)
                 totalbytes += packet->len;
                 if (totalbytes > (msg->maxsize - msg->cursize) / 2) break;
 
-                if (cl->netchan.alternateProtocol != 0) MSG_WriteByte(msg, svc_EOF);
+                if (cl->protocol() != 0) MSG_WriteByte(msg, svc_EOF);
                 MSG_WriteByte(msg, svc_voipSpeex);
-                if (cl->netchan.alternateProtocol != 0) MSG_WriteByte(msg, svc_voipSpeex + 1);
+                if (cl->protocol() != 0) MSG_WriteByte(msg, svc_voipSpeex + 1);
                 MSG_WriteShort(msg, packet->sender);
                 MSG_WriteByte(msg, (byte)packet->generation);
                 MSG_WriteLong(msg, packet->sequence);
                 MSG_WriteByte(msg, packet->frames);
                 MSG_WriteShort(msg, packet->len);
-                if (cl->netchan.alternateProtocol == 0) MSG_WriteBits(msg, packet->flags, VOIP_FLAGCNT);
+                if (cl->protocol() == 0) MSG_WriteBits(msg, packet->flags, VOIP_FLAGCNT);
                 MSG_WriteData(msg, packet->data, packet->len);
             }
 

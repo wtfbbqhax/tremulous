@@ -48,9 +48,9 @@ static void SV_SendConfigstring(client_t *client, int i)
         return;
     }
 
-    if (i <= CS_SYSTEMINFO && client->netchan.alternateProtocol != 0)
+    if (i <= CS_SYSTEMINFO && client->protocol() != 0)
     {
-        configstring = alternateInfos[i][client->netchan.alternateProtocol - 1];
+        configstring = alternateInfos[i][client->protocol() - 1];
     }
     else
     {
@@ -209,7 +209,7 @@ void SV_SetConfigstring(int idx, const char *val)
         // send the data to all relevent clients
         for (i = 0, client = svs.clients; i < sv_maxclients->integer; i++, client++)
         {
-            if (idx <= CS_SYSTEMINFO && !modified[client->netchan.alternateProtocol])
+            if (idx <= CS_SYSTEMINFO && !modified[client->protocol()])
             {
                 continue;
             }
@@ -678,7 +678,7 @@ void SV_SpawnServer(char *server)
             {
                 // this generally shouldn't happen, because the client
                 // was connected before the level change
-                SV_DropClient(&svs.clients[i], denied);
+                svs.clients[i].Drop(denied);
             }
             else
             {
@@ -906,8 +906,7 @@ void SV_Shutdown(const char *finalmsg)
     if (svs.clients)
     {
         for (int i = 0; i < sv_maxclients->integer; i++)
-            SV_FreeClient(&svs.clients[i]);
-
+            svs.clients[i].Free();
         Z_Free(svs.clients);
     }
     ::memset(&svs, 0, sizeof(svs));

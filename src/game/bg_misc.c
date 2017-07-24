@@ -3842,54 +3842,53 @@ BG_LoadEmoticons
 */
 int BG_LoadEmoticons( emoticon_t *emoticons, int num )
 {
-  int numFiles;
-  char fileList[ MAX_EMOTICONS * ( MAX_EMOTICON_NAME_LEN + 9 ) ] = {""};
-  int i;
-  char *filePtr;
-  int fileLen;
-  int count;
+    int numFiles;
+    char fileList[ MAX_EMOTICONS * ( MAX_EMOTICON_NAME_LEN + 9 ) ] = {""};
+    int i;
+    char *filePtr;
+    int fileLen;
+    int count;
 
-  numFiles = trap_FS_GetFileList( "emoticons", "x1.tga", fileList,
-    sizeof( fileList ) );
+    numFiles = trap_FS_GetFileList("emoticons", "x1.tga", fileList, sizeof(fileList));
 
-  if( numFiles < 1 )
-    return 0;
+    if( numFiles < 1 )
+        return 0;
 
-  filePtr = fileList;
-  fileLen = 0;
-  count = 0;
-  for( i = 0; i < numFiles && count < num; i++, filePtr += fileLen + 1 )
-  {
-    fileLen = strlen( filePtr );
-    if( fileLen < 9 || filePtr[ fileLen - 8 ] != '_' ||
-        filePtr[ fileLen - 7 ] < '1' || filePtr[ fileLen - 7 ] > '9' )
+    filePtr = fileList;
+    fileLen = 0;
+    count = 0;
+    for( i = 0; i < numFiles && count < num; i++, filePtr += fileLen + 1 )
     {
-      Com_Printf( S_COLOR_YELLOW "skipping invalidly named emoticon \"%s\"\n",
-        filePtr );
-      continue;
-    }
-    if( fileLen - 8 > MAX_EMOTICON_NAME_LEN )
-    {
-      Com_Printf( S_COLOR_YELLOW "emoticon file name \"%s\" too long (>%d)\n",
-        filePtr, MAX_EMOTICON_NAME_LEN + 8 );
-      continue;
-    }
-    if( !trap_FS_FOpenFile( va( "emoticons/%s", filePtr ), NULL, FS_READ ) )
-    {
-      Com_Printf( S_COLOR_YELLOW "could not open \"emoticons/%s\"\n", filePtr );
-      continue;
-    }
+        fileLen = strlen(filePtr);
+        if( fileLen < 9
+                || filePtr[ fileLen - 8 ] != '_'
+                || filePtr[ fileLen - 7 ] < '1'
+                || filePtr[ fileLen - 7 ] > '9' )
+        {
+            Com_Printf( S_COLOR_YELLOW "skipping invalidly named emoticon \"%s\"\n", filePtr );
+            continue;
+        }
+        if( fileLen - 8 > MAX_EMOTICON_NAME_LEN )
+        {
+            Com_Printf( S_COLOR_YELLOW "emoticon file name \"%s\" too long (>%d)\n", filePtr, MAX_EMOTICON_NAME_LEN + 8 );
+            continue;
+        }
+        if( !trap_FS_FOpenFile( va( "emoticons/%s", filePtr ), NULL, FS_READ ) )
+        {
+            Com_Printf( S_COLOR_YELLOW "could not open \"emoticons/%s\"\n", filePtr );
+            continue;
+        }
 
-    Q_strncpyz( emoticons[ count ].name, filePtr, fileLen - 8 + 1 );
+        Q_strncpyz( emoticons[ count ].name, filePtr, fileLen - 8 + 1 );
 #ifndef GAME
-    emoticons[ count ].width = filePtr[ fileLen - 7 ] - '0';
+        emoticons[ count ].width = filePtr[ fileLen - 7 ] - '0';
 #endif
-    count++;
-  }
+        count++;
+    }
 
-  Com_Printf( "Loaded %d of %d emoticons (MAX_EMOTICONS is %d)\n",
-    count, numFiles, MAX_EMOTICONS );
-  return count;
+    Com_Printf( "Loaded %d of %d emoticons (MAX_EMOTICONS is %d)\n",
+            count, numFiles, MAX_EMOTICONS );
+    return count;
 }
 
 /*

@@ -159,7 +159,7 @@ typedef struct {
 
 	// a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance
-	int		(*FS_FileIsInPAK)( const char *name, int *pCheckSum );
+	bool	(*FS_FileIsInPAK)( const char *name, int *pCheckSum );
 	long		(*FS_ReadFile)( const char *name, void **buf );
 	void	(*FS_FreeFile)( void *buf );
 	char **	(*FS_ListFiles)( const char *name, const char *extension, int *numfilesfound );

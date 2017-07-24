@@ -94,7 +94,7 @@ void SV_GameDropClient( int clientNum, const char *reason ) {
 	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
 		return;
 	}
-	SV_DropClient( svs.clients + clientNum, reason );	
+	svs.clients[clientNum].Drop(reason);	
 }
 
 

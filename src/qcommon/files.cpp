@@ -1573,7 +1573,7 @@ CONVENIENCE FUNCTIONS FOR ENTIRE FILES
 ======================================================================================
 */
 
-int FS_FileIsInPAK_A(bool alternate, const char *filename, int *pChecksum)
+bool FS_FileIsInPAK_A(bool alternate, const char *filename, int *pChecksum)
 {
     if (!fs_searchpaths)
         Com_Error(ERR_FATAL, "Filesystem call made without initialization");
@@ -1589,7 +1589,7 @@ int FS_FileIsInPAK_A(bool alternate, const char *filename, int *pChecksum)
     // The searchpaths do guarantee that something will always
     // be prepended, so we don't need to worry about "c:" or "//limbo"
     if (strstr(filename, "..") || strstr(filename, "::"))
-        return -1;
+        return false;
 
     //
     // search through the path, one element at a time
@@ -1613,13 +1613,13 @@ int FS_FileIsInPAK_A(bool alternate, const char *filename, int *pChecksum)
             if (pChecksum)
                 *pChecksum = search->pack->pure_checksum;
 
-            return 1;
+            return true;
         }
     }
-    return -1;
+    return false;
 }
 
-int FS_FileIsInPAK(const char *filename, int *pChecksum)
+bool FS_FileIsInPAK(const char *filename, int *pChecksum)
 {
     return FS_FileIsInPAK_A(false, filename, pChecksum);
 }
@@ -1951,14 +1951,15 @@ static pack_t *FS_LoadZipFile(const char *zipfile, const char *basename)
         unzGoToNextFile(z);
     }
 
-    pack->checksum =
-        Com_BlockChecksum(&fs_headerLongs[1], sizeof(*fs_headerLongs) * (fs_numHeaderLongs - 1));
-    pack->pure_checksum =
-        Com_BlockChecksum(fs_headerLongs, sizeof(*fs_headerLongs) * fs_numHeaderLongs);
+    pack->checksum = Com_BlockChecksum(&fs_headerLongs[1], sizeof(*fs_headerLongs) * (fs_numHeaderLongs - 1));
+    pack->pure_checksum = Com_BlockChecksum(fs_headerLongs, sizeof(*fs_headerLongs) * fs_numHeaderLongs);
     pack->checksum = LittleLong(pack->checksum);
     pack->pure_checksum = LittleLong(pack->pure_checksum);
 
     Z_Free(fs_headerLongs);
+
+    Com_DPrintf("FS_LoadZipFile: basename %s, zipfile %s, checksum %.8X, pure checksum %.8X\n",
+            basename, zipfile, pack->checksum, pack->pure_checksum);
 
     pack->buildBuffer = buildBuffer;
     return pack;
@@ -2659,8 +2660,10 @@ void FS_Path_f(void)
                     : s->pack->onlyAlternate ? ", only for 1.1" : "");
 
             if (s->pack->primaryVersion)
+            {
                 Com_Printf("        (the 1.1 version of %s)\n",
                         s->pack->primaryVersion->pakFilename);
+            }
 
             if (fs_numServerPaks)
             {

@@ -74,7 +74,7 @@ void Cmd_AddCommand(const char *cmd_name, xcommand_t function);
 
 void Cmd_RemoveCommand(const char *cmd_name);
 
-typedef void (*completionFunc_t)(char *args, int argNum);
+using completionFunc_t = void(*)(char* args, int maxargs);
 
 // don't allow VMs to remove system commands
 void Cmd_RemoveCommandSafe(const char *cmd_name);
