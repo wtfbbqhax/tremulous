@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/cvar.h"
 #include "server.h"
+#include "admin.h"
 
 char alternateInfos[2][2][BIG_INFO_STRING];
 
@@ -776,6 +777,8 @@ Only called at main exe startup, not for each game
 void SV_Init(void)
 {
     SV_AddOperatorCommands();
+
+    Admin::Init();
 
     // serverinfo vars
     Cvar_Get("timelimit", "0", CVAR_SERVERINFO);

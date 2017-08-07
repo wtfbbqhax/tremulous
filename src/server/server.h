@@ -38,6 +38,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 #include "../sys/sys_shared.h"
 
+using Name = char[MAX_NAME_LENGTH];
+using Guid = char[33];
+
 //=============================================================================
 
 #define PERS_SCORE 0  // !!! MUST NOT CHANGE, SERVER AND GAME BOTH REFERENCE !!!
@@ -139,7 +142,8 @@ struct netchan_buffer_t {
     netchan_buffer_t *next;
 };
 
-struct client_t {
+struct client_t
+{
     clientState_t state;
     char userinfo[MAX_INFO_STRING];  // name, etc
 
@@ -157,7 +161,11 @@ struct client_t {
     int lastClientCommand;  // reliable client message sequence
     char lastClientCommandString[MAX_STRING_CHARS];
     sharedEntity_t *gentity;  // SV_GentityNum(clientnum)
-    char name[MAX_NAME_LENGTH];  // extracted from userinfo, high bits masked
+
+    // --extracted from userinfo
+    Name name; // high bits masked
+    Guid guid;
+    //addr_t ip; // future ban system
 
     // downloading
     char downloadName[MAX_QPATH];  // if not empty string, we are downloading
@@ -447,5 +455,22 @@ void SV_Netchan_Transmit(client_t *client, msg_t *msg);
 int SV_Netchan_TransmitNextFragment(client_t *client);
 bool SV_Netchan_Process(client_t *client, msg_t *msg);
 void SV_Netchan_FreeQueue(client_t *client);
+
+
+//
+// admp.cpp
+//
+void _flush_server_print(client_t*);
+void SV_admin_bprintf(client_t*, const char*, ...);
+
+#define ADMBP(...) SV_admin_bprintf( cl, __VA_ARGS__)
+#define ADMBP_flush() _flush_server_print( cl )
+
+void SV_admin_printf(client_t*, const char*, ...);
+void SV_admin_cp_printf(client_t*, const char*, ...);
+
+#define ADMP(...) SV_admin_printf( cl, __VA_ARGS__)
+#define AP(...) SV_admin_printf( nullptr, __VA_ARGS__)
+#define CP(...) SV_admin_cp_printf( cl, __VA_ARGS__)
 
 #endif

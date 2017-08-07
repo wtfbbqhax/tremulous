@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // sv_client.c -- server code for dealing with clients
 
 #include "server.h"
+#include "admin.h"
 
 static void SV_CloseDownload( client_t *cl );
 
@@ -1441,9 +1442,13 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, bool clientOK ) {
 		}
 	}
 
-	if (clientOK) {
+	if (clientOK)
+    {
+        Admin::Command(cl);
+
 		// pass unknown strings to the game
-		if (!u->name && sv.state == SS_GAME && (cl->state == CS_ACTIVE || cl->state == CS_PRIMED)) {
+		if (!u->name && sv.state == SS_GAME && (cl->state == CS_ACTIVE || cl->state == CS_PRIMED))
+        {
 			VM_Call( gvm, GAME_CLIENT_COMMAND, cl - svs.clients );
 		}
 	}

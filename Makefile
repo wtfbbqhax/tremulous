@@ -1969,6 +1969,8 @@ Q3OBJ = \
   \
   $(B)/client/cl_curl.o \
   \
+  $(B)/client/admp.o \
+  $(B)/client/admin.o \
   $(B)/client/sv_ccmds.o \
   $(B)/client/sv_client.o \
   $(B)/client/sv_game.o \
@@ -2471,6 +2473,8 @@ endif
 #############################################################################
 
 Q3DOBJ = \
+  $(B)/ded/admp.o \
+  $(B)/ded/admin.o \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
   $(B)/ded/sv_game.o \
