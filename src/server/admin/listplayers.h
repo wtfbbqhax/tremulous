@@ -11,20 +11,18 @@ namespace Admin
             int cnt = 0;
             client_t *client = svs.clients;
 
-            if ( !client )
+            if ( client )
             {
-                ADMP( "^3listplayers: ^7%d players connected:\n", cnt );
-                return;
+                for ( int i = 0; i < sv_maxclients->integer; ++i, ++client )
+                {
+                    if ( client->state != CS_ACTIVE ) 
+                        continue;
+                    cnt++;
+                    ADMP( "%s\n", client->name );
+                }
             }
-
-            for ( int i = 0; i < sv_maxclients->integer; ++i, ++client )
-            {
-                if ( client->state != CS_ACTIVE ) 
-                    continue;
-                cnt++;
-                ADMP( "%s\n", client->name );
-            }
-            ADMP( "^3listplayers: ^7%d players connected:\n", cnt );
+            
+            ADMP(S_COLOR_YELLOW  "listplayers: " S_COLOR_WHITE "%d players connected\n", cnt);
         },
         0
     };
