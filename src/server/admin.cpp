@@ -1,38 +1,15 @@
 #include "admin.h"
 #include "server.h"
+#include "admin/commands.h"
 
 namespace Admin
 {
-    static void _admin_adduser(client_t *cl)
+    using Err = char[MAX_STRING_CHARS];
+
+       void ConsoleCommand()
     {
-        AP(S_COLOR_YELLOW "adduser: " S_COLOR_WHITE "\n");
-        
+        Command(nullptr);
     }
-
-    static void _admin_deluser(client_t *cl)
-    {
-        AP(S_COLOR_YELLOW "deluser: " S_COLOR_WHITE "\n");
-    }
-
-    struct command_t 
-    {
-        const char* keyword;
-        void (*handler)(client_t*);
-        int flag;
-        static int sort( const void *a, const void *b ) { return strcasecmp(((command_t*)a)->keyword, ((command_t*)b)->keyword); }
-        static int cmp( const void *a, const void *b ) { return strcasecmp((const char*)a, ((command_t*)b)->keyword); }
-    };
-
-    command_t admin_commands[] =
-    {
-        { "adduser", _admin_adduser, ADMIN_FLG_RCON },
-        { "deluser", _admin_deluser, ADMIN_FLG_RCON },
-    };
-
-    constexpr size_t numCmds = ARRAY_LEN(admin_commands);
-
-    void ConsoleCommand()
-    { Command(nullptr); }
 
     void Init()
     {

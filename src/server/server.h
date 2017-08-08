@@ -165,7 +165,6 @@ struct client_t
     // --extracted from userinfo
     Name name; // high bits masked
     Guid guid;
-    //addr_t ip; // future ban system
 
     // downloading
     char downloadName[MAX_QPATH];  // if not empty string, we are downloading
