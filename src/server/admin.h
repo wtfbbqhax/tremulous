@@ -21,4 +21,8 @@ namespace Admin
 
     void Init();
     bool Command(client_t*);
+
+    void SanitiseString(char const * in, char * out, int len);
+    client_t * ClientFromString(char const * s, char * err, int len);
+    void ClientCleanName(char const * in, Name out, int outSize); // FIXIT=L: make member of client_t
 };

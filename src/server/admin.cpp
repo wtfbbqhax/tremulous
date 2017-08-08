@@ -3,70 +3,51 @@
 
 namespace Admin
 {
-    //
-    // Command Handlers
-    //
-    static void _admin_admintest(client_t *cl)
+    static void _admin_adduser(client_t *cl)
     {
-        if ( !cl )
-        {
-            ADMP(S_COLOR_YELLOW "admincheck: " S_COLOR_WHITE "you are on the console\n");
-            return;
-        }
-
-        AP( S_COLOR_YELLOW "admincheck: " S_COLOR_WHITE "%s " S_COLOR_WHITE "\n", cl->name );
+        AP(S_COLOR_YELLOW "adduser: " S_COLOR_WHITE "\n");
+        
     }
 
-    //
-    // Command Definitions
-    //
+    static void _admin_deluser(client_t *cl)
+    {
+        AP(S_COLOR_YELLOW "deluser: " S_COLOR_WHITE "\n");
+    }
+
     struct command_t 
     {
         const char* keyword;
         void (*handler)(client_t*);
-        bool silent;
         int flag;
-        const char *function;
-        const char *syntax;
-    }
-    admin_commands[] =
+        static int sort( const void *a, const void *b ) { return strcasecmp(((command_t*)a)->keyword, ((command_t*)b)->keyword); }
+        static int cmp( const void *a, const void *b ) { return strcasecmp((const char*)a, ((command_t*)b)->keyword); }
+    };
+
+    command_t admin_commands[] =
     {
-        { "admincheck", _admin_admintest, false, ADMIN_FLG_RCON, "display your current admin level", "" },
+        { "adduser", _admin_adduser, ADMIN_FLG_RCON },
+        { "deluser", _admin_deluser, ADMIN_FLG_RCON },
     };
 
     constexpr size_t numCmds = ARRAY_LEN(admin_commands);
 
-    static int _sort_cmp( const void *a, const void *b ) { return strcasecmp(((command_t*)a)->keyword, ((command_t*)b)->keyword); }
-    static int _cmdcmp( const void *a, const void *b ) { return strcasecmp((const char*)a, ((command_t*)b)->keyword); }
-
     void ConsoleCommand()
     { Command(nullptr); }
 
-    //
-    // Command Dispatch
-    //
     void Init()
     {
-        static bool init = false;
-        if ( init ) return;
-
         for ( size_t i = 0; i < numCmds; ++i )
             Cmd_AddCommand(admin_commands[i].keyword, ConsoleCommand);
-        
-        qsort(admin_commands, numCmds, sizeof(admin_commands[0]), _sort_cmp);
-        init = true;
+        qsort(admin_commands, numCmds, sizeof(admin_commands[0]), command_t::sort);
     }
 
     bool Command(client_t* client)
     {
-        Init();
-
-        command_t *cmd = (command_t*)bsearch(Cmd_Argv(0), admin_commands, numCmds, sizeof(admin_commands[0]), _cmdcmp);
-
+        command_t* cmd = (command_t*)bsearch(Cmd_Argv(0), admin_commands, numCmds, sizeof(admin_commands[0]), command_t::cmp);
         if ( !cmd )
             return false;
 
-        cmd->handler( client );
+        cmd->handler(client);
         return true;
     }
 };

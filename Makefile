@@ -1971,6 +1971,9 @@ Q3OBJ = \
   \
   $(B)/client/admp.o \
   $(B)/client/admin.o \
+  $(B)/client/ClientFromString.o \
+  $(B)/client/SanitiseString.o \
+  $(B)/client/ClientCleanName.o \
   $(B)/client/sv_ccmds.o \
   $(B)/client/sv_client.o \
   $(B)/client/sv_game.o \
@@ -2475,6 +2478,9 @@ endif
 Q3DOBJ = \
   $(B)/ded/admp.o \
   $(B)/ded/admin.o \
+  $(B)/ded/ClientFromString.o \
+  $(B)/ded/SanitiseString.o \
+  $(B)/ded/ClientCleanName.o \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
   $(B)/ded/sv_game.o \
@@ -2819,6 +2825,9 @@ $(B)/client/%.o: $(CDIR)/%.cpp
 $(B)/client/%.o: $(SDIR)/%.cpp
 	$(DO_CXX)
 
+$(B)/client/%.o: $(SDIR)/admin/%.cpp
+	$(DO_CXX)
+
 $(B)/client/%.o: $(CMDIR)/%.cpp
 	$(DO_CXX)
 
@@ -2916,6 +2925,9 @@ $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(SDIR)/%.cpp
+	$(DO_DED_CXX)
+
+$(B)/ded/%.o: $(SDIR)/admin/%.cpp
 	$(DO_DED_CXX)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
