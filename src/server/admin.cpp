@@ -15,6 +15,7 @@ namespace Admin
     {
         for ( size_t i = 0; i < numCmds; ++i )
             Cmd_AddCommand(admin_commands[i].keyword, ConsoleCommand);
+
         qsort(admin_commands, numCmds, sizeof(admin_commands[0]), command_t::sort);
     }
 

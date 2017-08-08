@@ -3,14 +3,13 @@
 
 namespace Admin
 {
-    static void exec(client_t* cl)
+    command_t admintest
     {
-        ADMP(S_COLOR_YELLOW "admintest: " S_COLOR_WHITE "Hello world\n");
-    }
-
-
-    constexpr command_t admintest
-    {
-        "admintest", exec, 0 
+        "admintest", 
+        [](client_t*cl)
+        { 
+            ADMP(S_COLOR_YELLOW "admintest: " S_COLOR_WHITE "Hello world\n");
+        },
+        0 
     };
 }
