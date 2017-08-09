@@ -4,6 +4,6 @@ namespace Admin
     {
         "admintest", 
         [](client_t*cl) { ADMP(S_COLOR_YELLOW "admintest: " S_COLOR_WHITE "Hello world\n"); },
-        0 
+        0
     };
 }

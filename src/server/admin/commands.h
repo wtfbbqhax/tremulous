@@ -17,6 +17,7 @@ namespace Admin
 #include "commands/admintest.h"
 #include "commands/listplayers.h"
 #include "commands/map.h"
+#include "commands/setlevel.h"
 
 namespace Admin
 {
@@ -25,7 +26,8 @@ namespace Admin
         admintest,
         listplayers,
         devmap,
-        map
+        map,
+        setlevel
     };
 
     constexpr size_t numCmds = ARRAY_LEN(admin_commands);

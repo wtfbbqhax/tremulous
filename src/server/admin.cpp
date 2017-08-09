@@ -1,13 +1,26 @@
 #include "admin.h"
 #include "server.h"
 
-#include "admin/commands.h"
+#include "admin/utils/admin_higher.h"
+#include "admin/utils/SanitiseString.h"
 #include "admin/utils/ClientCleanName.h"
 #include "admin/utils/ClientFromString.h"
-#include "admin/utils/SanitiseString.h"
+#include "admin/commands.h"
 
 namespace Admin {
 std::unordered_map<std::string, Admin> Admin::guid_admin_map;
+
+void Admin::Add(client_t* cl, unsigned level)
+{
+    Admin admin;
+
+    ::memcpy(admin.guid, cl->guid, sizeof(admin.guid));
+    ::memcpy(admin.name, cl->name, sizeof(admin.name));
+    admin.flags = 0;
+    admin.denied = 0;
+    admin.level = level;
+    guid_admin_map.emplace( std::make_pair(cl->guid, admin));
+}
 
 void ConsoleCommand() { Command(nullptr); }
 
