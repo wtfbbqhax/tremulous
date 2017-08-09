@@ -406,15 +406,11 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
             return 0;
         case G_GET_ENTITY_TOKEN:
             {
-                const char	*s;
-
-                s = COM_Parse( &sv.entityParsePoint );
+                const char	*s = COM_Parse( &sv.entityParsePoint );
                 Q_strncpyz( (char*)VMA(1), s, args[2] );
-                if ( !sv.entityParsePoint && !s[0] ) {
+                if ( !sv.entityParsePoint && !s[0] )
                     return false;
-                } else {
-                    return true;
-                }
+                return true;
             }
 
         case G_REAL_TIME:

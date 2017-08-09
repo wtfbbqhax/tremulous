@@ -1,12 +1,16 @@
 #include "admin.h"
 #include "server.h"
+
+#include "admin/utils/SanitiseString.h"
+#include "admin/utils/ClientFromString.h"
+#include "admin/utils/ClientCleanName.h"
 #include "admin/commands.h"
 
 namespace Admin
 {
-    using Err = char[MAX_STRING_CHARS];
+    std::unordered_map<std::string,Admin> Admin::guid_admin_map;
 
-       void ConsoleCommand()
+    void ConsoleCommand()
     {
         Command(nullptr);
     }

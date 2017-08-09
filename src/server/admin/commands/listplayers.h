@@ -1,6 +1,3 @@
-#include "../server.h"
-#include "../admin.h"
-
 namespace Admin
 {
     command_t listplayers 

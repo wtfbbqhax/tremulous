@@ -39,7 +39,8 @@ SV_Map_f
 Restart the server on a different map
 ==================
 */
-static void SV_Map_f( void ) {
+static void SV_Map_f( void )
+{
 	const char	*cmd;
 	const char	*map;
 	bool        cheat;
@@ -242,7 +243,8 @@ SV_Serverinfo_f
 Examine the serverinfo string
 ===========
 */
-static void SV_Serverinfo_f( void ) {
+static void SV_Serverinfo_f( void )
+{
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
 		Com_Printf( "Server is not running.\n" );
@@ -286,17 +288,6 @@ static void SV_KillServer_f( void ) {
 
 /*
 ==================
-SV_CompleteMapName
-==================
-*/
-static void SV_CompleteMapName( char *args, int argNum ) {
-	if( argNum == 2 ) {
-		Field_CompleteFilename( "maps", "bsp", true, false );
-	}
-}
-
-/*
-==================
 SV_AddOperatorCommands
 ==================
 */
@@ -313,10 +304,6 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
 	Cmd_AddCommand ("sectorlist", SV_SectorList_f);
-	Cmd_AddCommand ("map", SV_Map_f);
-	Cmd_SetCommandCompletionFunc( "map", SV_CompleteMapName );
-	Cmd_AddCommand ("devmap", SV_Map_f);
-	Cmd_SetCommandCompletionFunc( "devmap", SV_CompleteMapName );
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 }
 

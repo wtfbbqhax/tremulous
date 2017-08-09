@@ -39,7 +39,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_shared.h"
 
 using Name = char[MAX_NAME_LENGTH];
+using Err = char[MAX_STRING_CHARS];
 using Guid = char[33];
+
+namespace Admin {
+    struct Admin;
+}
 
 //=============================================================================
 
@@ -163,6 +168,7 @@ struct client_t
     sharedEntity_t *gentity;  // SV_GentityNum(clientnum)
 
     // --extracted from userinfo
+    Admin::Admin* admin;
     Name name; // high bits masked
     Guid guid;
 

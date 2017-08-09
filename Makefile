@@ -1971,9 +1971,6 @@ Q3OBJ = \
   \
   $(B)/client/admp.o \
   $(B)/client/admin.o \
-  $(B)/client/ClientFromString.o \
-  $(B)/client/SanitiseString.o \
-  $(B)/client/ClientCleanName.o \
   $(B)/client/sv_ccmds.o \
   $(B)/client/sv_client.o \
   $(B)/client/sv_game.o \
@@ -2478,9 +2475,6 @@ endif
 Q3DOBJ = \
   $(B)/ded/admp.o \
   $(B)/ded/admin.o \
-  $(B)/ded/ClientFromString.o \
-  $(B)/ded/SanitiseString.o \
-  $(B)/ded/ClientCleanName.o \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
   $(B)/ded/sv_game.o \

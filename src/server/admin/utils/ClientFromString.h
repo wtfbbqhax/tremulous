@@ -1,6 +1,3 @@
-#include "../server.h"
-#include "../admin.h"
-
 namespace Admin
 {
     client_t * ClientFromString(const char * s, char * err, int len)

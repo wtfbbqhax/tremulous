@@ -1,6 +1,3 @@
-#include "../server.h"
-#include "../admin.h"
-
 namespace Admin
 {
     // FIXIT-H Find alternative or put somewhere nice 

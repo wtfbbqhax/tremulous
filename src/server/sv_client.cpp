@@ -452,6 +452,8 @@ gotnewcl:
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
+    newcl->admin = Admin::Admin::Find(newcl->guid);
+
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = VM_Call( gvm, GAME_CLIENT_CONNECT, clientNum, true ); // firstTime = true
 	if ( denied ) {
@@ -1260,8 +1262,8 @@ void SV_UserinfoChanged( client_t *cl ) {
 	int		i;
 	int	len;
 
-	// name for C code
-	Q_strncpyz( cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name) );
+	Q_strncpyz( cl->name, Info_ValueForKey(cl->userinfo, "name"), sizeof(cl->name) );
+	Q_strncpyz( cl->guid, Info_ValueForKey(cl->userinfo, "guid"), sizeof(cl->guid) );
 
 	// rate command
 
