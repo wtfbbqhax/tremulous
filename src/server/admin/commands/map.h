@@ -2,10 +2,13 @@ namespace Admin
 {
     static void CompleteMapName(char*, int argc)
     {
-        if ( argc == 2 ) Field_CompleteFilename( "maps", "bsp", true, false  );
+        if ( argc == 2 )
+        {
+            Field_CompleteFilename("maps", "bsp", true, false);
+        }
     }
 
-    void _mapcmd(client_t * cl, bool cheats)
+    static void _mapcmd(client_t * cl, bool cheats)
     { 
         char const * map = Cmd_Argv(1);
         if ( !map )
@@ -27,9 +30,9 @@ namespace Admin
         Q_strncpyz(mapname, map, sizeof(mapname));
 
         // start up the map
-        SV_SpawnServer( mapname );
+        SV_SpawnServer(mapname);
 
-        Cvar_Set( "sv_cheats", cheats ? "1" : "0" );
+        Cvar_Set("sv_cheats", cheats ? "1" : "0");
 
         // This forces the local master server IP address cache
         // to be updated on sending the next heartbeat
@@ -42,17 +45,11 @@ namespace Admin
 
     command_t map
     {
-        "map", 
-        [](client_t * cl) { _mapcmd(cl, false); },
-        0,
-        CompleteMapName
+        "map", [](client_t * cl) { _mapcmd(cl, false); }, ADMIN_FLG_DEVMAP, CompleteMapName
     };
 
     command_t devmap
     {
-        "devmap", 
-        [](client_t * cl) { _mapcmd(cl, true); },
-        0,
-        CompleteMapName
+        "devmap", [](client_t * cl) { _mapcmd(cl, true); }, ADMIN_FLG_DEVMAP, CompleteMapName
     };
 }
