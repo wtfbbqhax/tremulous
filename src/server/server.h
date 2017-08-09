@@ -42,9 +42,7 @@ using Name = char[MAX_NAME_LENGTH];
 using Err = char[MAX_STRING_CHARS];
 using Guid = char[33];
 
-namespace Admin {
-    struct Admin;
-}
+#include "admin.h"
 
 //=============================================================================
 
@@ -169,6 +167,16 @@ struct client_t
 
     // --extracted from userinfo
     Admin::Admin* admin;
+
+    bool has_permission(Admin::Flags flags)
+    {
+        if ( admin )
+        {
+            return (admin->flags & flags) == flags;
+        }
+        return false;
+    }
+
     Name name; // high bits masked
     Guid guid;
 

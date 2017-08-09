@@ -23,13 +23,19 @@ namespace Admin
         qsort(admin_commands, numCmds, sizeof(admin_commands[0]), command_t::sort);
     }
 
-    bool Command(client_t* client)
+    bool Command(client_t* cl)
     {
         command_t* cmd = (command_t*)bsearch(Cmd_Argv(0), admin_commands, numCmds, sizeof(admin_commands[0]), command_t::cmp);
         if ( !cmd )
             return false;
 
-        cmd->handler(client);
+        if ( cl && !cl->has_permission(cmd->flag) )
+        {
+            ADMP("Sorry, you do not have permission.\n");
+            return false;
+        }
+
+        cmd->handler(cl);
         return true;
     }
 };
