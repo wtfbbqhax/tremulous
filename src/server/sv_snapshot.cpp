@@ -394,11 +394,13 @@ static void SV_AddEntitiesVisibleFromPoint(vec3_t origin, clientSnapshot_t *fram
         {
             if (frame->ps.clientNum >= 32)
             {
-                if (~ent->r.hack.generic1 & (1 << (frame->ps.clientNum - 32))) continue;
+                if (~ent->r.hack.generic1 & (1 << (frame->ps.clientNum - 32)))
+                    continue;
             }
             else
             {
-                if (~ent->r.singleClient & (1 << frame->ps.clientNum)) continue;
+                if (~ent->r.singleClient & (1 << frame->ps.clientNum))
+                    continue;
             }
         }
 
@@ -614,17 +616,21 @@ static void SV_WriteVoipToClient(client_t *cl, msg_t *msg)
             if (!*cl->downloadName)
             {
                 totalbytes += packet->len;
-                if (totalbytes > (msg->maxsize - msg->cursize) / 2) break;
+                if (totalbytes > (msg->maxsize - msg->cursize) / 2)
+                    break;
 
-                if (cl->netchan.alternateProtocol != 0) MSG_WriteByte(msg, svc_EOF);
+                if (cl->netchan.alternateProtocol != 0)
+                    MSG_WriteByte(msg, svc_EOF);
                 MSG_WriteByte(msg, svc_voipSpeex);
-                if (cl->netchan.alternateProtocol != 0) MSG_WriteByte(msg, svc_voipSpeex + 1);
+                if (cl->netchan.alternateProtocol != 0)
+                    MSG_WriteByte(msg, svc_voipSpeex + 1);
                 MSG_WriteShort(msg, packet->sender);
                 MSG_WriteByte(msg, (byte)packet->generation);
                 MSG_WriteLong(msg, packet->sequence);
                 MSG_WriteByte(msg, packet->frames);
                 MSG_WriteShort(msg, packet->len);
-                if (cl->netchan.alternateProtocol == 0) MSG_WriteBits(msg, packet->flags, VOIP_FLAGCNT);
+                if (cl->netchan.alternateProtocol == 0)
+                    MSG_WriteBits(msg, packet->flags, VOIP_FLAGCNT);
                 MSG_WriteData(msg, packet->data, packet->len);
             }
 
@@ -715,9 +721,11 @@ void SV_SendClientMessages(void)
     {
         c = &svs.clients[i];
 
-        if (!c->state) continue;  // not connected
+        if (!c->state)
+            continue;  // not connected
 
-        if (*c->downloadName) continue;  // Client is downloading, don't send snapshots
+        if (*c->downloadName)
+            continue;  // Client is downloading, don't send snapshots
 
         if (c->netchan.unsentFragments || c->netchan_start_queue)
         {
@@ -730,7 +738,8 @@ void SV_SendClientMessages(void)
         {
             // rate control for clients not on LAN
 
-            if (svs.time - c->lastSnapshotTime < c->snapshotMsec * com_timescale->value) continue;  // It's not time yet
+            if (svs.time - c->lastSnapshotTime < c->snapshotMsec * com_timescale->value)
+                continue;  // It's not time yet
 
             if (SV_RateMsec(c) > 0)
             {

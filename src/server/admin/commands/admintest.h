@@ -3,10 +3,7 @@ namespace Admin
     command_t admintest
     {
         "admintest", 
-        [](client_t*cl)
-        { 
-            ADMP(S_COLOR_YELLOW "admintest: " S_COLOR_WHITE "Hello world\n");
-        },
+        [](client_t*cl) { ADMP(S_COLOR_YELLOW "admintest: " S_COLOR_WHITE "Hello world\n"); },
         0 
     };
 }

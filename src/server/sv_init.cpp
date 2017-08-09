@@ -22,8 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "../qcommon/cvar.h"
-#include "server.h"
 #include "admin.h"
+#include "server.h"
 
 char alternateInfos[2][2][BIG_INFO_STRING];
 
@@ -41,8 +41,7 @@ static void SV_SendConfigstring(client_t *client, int i)
     int maxChunkSize = MAX_STRING_CHARS - 24;
     int len;
 
-    if (sv.configstrings[i].restricted &&
-        Com_ClientListContains(&sv.configstrings[i].clientList, client - svs.clients))
+    if (sv.configstrings[i].restricted && Com_ClientListContains(&sv.configstrings[i].clientList, client - svs.clients))
     {
         // Send a blank config string for this client if it's listed
         SV_SendServerCommand(client, "cs %i \"\"\n", i);
@@ -109,7 +108,8 @@ void SV_UpdateConfigstrings(client_t *client)
     for (int i = 0; i < MAX_CONFIGSTRINGS; i++)
     {
         // if the CS hasn't changed since we went to CS_PRIMED, ignore
-        if (!client->csUpdated[i]) continue;
+        if (!client->csUpdated[i])
+            continue;
 
         // do not always send server info to all clients
         if (i == CS_SERVERINFO && client->gentity && (client->gentity->r.svFlags & SVF_NOSERVERINFO))
@@ -217,9 +217,11 @@ void SV_SetConfigstring(int idx, const char *val)
 
             if (client->state < CS_ACTIVE)
             {
-                if (client->state == CS_PRIMED) client->csUpdated[idx] = true;
+                if (client->state == CS_PRIMED)
+                    client->csUpdated[idx] = true;
                 continue;
             }
+
             // do not always send server info to all clients
             if (idx == CS_SERVERINFO && client->gentity && (client->gentity->r.svFlags & SVF_NOSERVERINFO))
             {
@@ -436,7 +438,8 @@ void SV_ChangeMaxClients(void)
     {
         if (svs.clients[i].state >= CS_CONNECTED)
         {
-            if (i > count) count = i;
+            if (i > count)
+                count = i;
         }
     }
     count++;
@@ -673,8 +676,7 @@ void SV_SpawnServer(char *server)
             char *denied;
 
             // connect the client again
-            denied =
-                (char *)VM_ExplicitArgPtr(gvm, VM_Call(gvm, GAME_CLIENT_CONNECT, i, false));  // firstTime = false
+            denied = (char *)VM_ExplicitArgPtr(gvm, VM_Call(gvm, GAME_CLIENT_CONNECT, i, false));  // firstTime = false
             if (denied)
             {
                 // this generally shouldn't happen, because the client
@@ -826,7 +828,8 @@ void SV_Init(void)
     {
         sv_masters[a][0] = Cvar_Get(va("sv_%smaster1", (a == 2 ? "alt2" : a == 1 ? "alt1" : "")), MASTER_SERVER_NAME, 0);
         for (int i = 1; i < MAX_MASTER_SERVERS; i++)
-            sv_masters[a][i] = Cvar_Get(va("sv_%smaster%d", (a == 2 ? "alt2" : a == 1 ? "alt1" : ""), i + 1), "", CVAR_ARCHIVE);
+            sv_masters[a][i] =
+                Cvar_Get(va("sv_%smaster%d", (a == 2 ? "alt2" : a == 1 ? "alt1" : ""), i + 1), "", CVAR_ARCHIVE);
     }
 
     sv_reconnectlimit = Cvar_Get("sv_reconnectlimit", "3", 0);
@@ -920,5 +923,6 @@ void SV_Shutdown(const char *finalmsg)
     Com_Printf("---------------------------\n");
 
     // disconnect any local clients
-    if (sv_killserver->integer != 2) CL_Disconnect(false);
+    if (sv_killserver->integer != 2)
+        CL_Disconnect(false);
 }
