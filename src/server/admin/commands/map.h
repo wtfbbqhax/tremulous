@@ -14,7 +14,7 @@ namespace Admin
         if ( !map )
             return;
 
-        char expanded[MAX_QPATH];
+        QPath expanded;
         Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", map);
 
         // FIXIT-L: FS_FileExistsInPak?
@@ -26,7 +26,7 @@ namespace Admin
 
         // save the map name here cause on a map restart we reload the autogen.cfg
         // and thus nuke the arguments of the map command
-        char mapname[MAX_QPATH];
+        QPath mapname;
         Q_strncpyz(mapname, map, sizeof(mapname));
 
         // start up the map
@@ -45,11 +45,11 @@ namespace Admin
 
     command_t map
     {
-        "map", [](client_t * cl) { _mapcmd(cl, false); }, ADMIN_FLG_DEVMAP, CompleteMapName
+        "map", [](client_t * cl) { _mapcmd(cl, false); }, ADMF_DEVMAP, CompleteMapName
     };
 
     command_t devmap
     {
-        "devmap", [](client_t * cl) { _mapcmd(cl, true); }, ADMIN_FLG_DEVMAP, CompleteMapName
+        "devmap", [](client_t * cl) { _mapcmd(cl, true); }, ADMF_DEVMAP, CompleteMapName
     };
 }

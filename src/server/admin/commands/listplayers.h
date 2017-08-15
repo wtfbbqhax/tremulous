@@ -2,7 +2,7 @@ namespace Admin
 {
     command_t listplayers 
     {
-        "listplayers",
+        ".listplayers",
         [](client_t*cl)
         {
             int cnt = 0;

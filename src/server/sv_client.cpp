@@ -874,7 +874,8 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
     int curindex;
     int unreferenced = 1;
     char errorMessage[1024];
-    char pakbuf[MAX_QPATH], *pakptr;
+    QPath pakbuf;
+    char *pakptr;
     int numRefPaks;
 
     if (!*cl->downloadName)

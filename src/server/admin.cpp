@@ -5,24 +5,45 @@
 #include "admin/utils/SanitiseString.h"
 #include "admin/utils/ClientCleanName.h"
 #include "admin/utils/ClientFromString.h"
+#include "admin/utils/admin_name_check.h"
 #include "admin/commands.h"
 
-namespace Admin {
+namespace Admin
+{
 std::unordered_map<std::string, Admin> Admin::guid_admin_map;
 
-void Admin::Add(client_t* cl, unsigned level)
+void Admin::Add(client_t * cl, unsigned level)
 {
     Admin admin;
-
     ::memcpy(admin.guid, cl->guid, sizeof(admin.guid));
     ::memcpy(admin.name, cl->name, sizeof(admin.name));
     admin.flags = 0;
     admin.denied = 0;
     admin.level = level;
-    guid_admin_map.emplace( std::make_pair(cl->guid, admin));
+    guid_admin_map.emplace(std::make_pair(cl->guid, admin));
+    cl->admin = &guid_admin_map.find(cl->guid)->second;
 }
 
-void ConsoleCommand() { Command(nullptr); }
+Admin* Admin::Find(Guid const guid)
+{
+    auto it = guid_admin_map.find(guid);
+    if (it != guid_admin_map.end())
+        return &it->second;
+    return nullptr;
+}
+
+void Admin::Store()
+{
+}
+
+void Admin::Load()
+{
+}
+
+void ConsoleCommand()
+{
+    Command(nullptr);
+}
 
 void Init()
 {

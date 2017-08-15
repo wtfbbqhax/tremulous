@@ -272,6 +272,7 @@ ZDIR=$(EXTERNAL_DIR)/zlib
 LUADIR=$(EXTERNAL_DIR)/lua-5.3.3/src
 RESTDIR=$(EXTERNAL_DIR)/restclient
 NETTLEDIR=$(EXTERNAL_DIR)/nettle-3.3
+MSGPACKDIR=$(EXTERNAL_DIR)/msgpack-c
 LUA_RAPIDJSONDIR=$(MOUNT_DIR)/script/rapidjson
 Q3ASMDIR=$(MOUNT_DIR)/tools/asm
 LBURGDIR=$(MOUNT_DIR)/tools/lcc/lburg
@@ -1911,6 +1912,12 @@ CFLAGS += -I$(NETTLEDIR)
 
 $(B)/nettle/%.o: $(NETTLEDIR)/nettle/%.c
 	$(DO_NETTLE_CC)
+
+#############################################################################
+# MsgPack 
+#############################################################################
+
+CFLAGS += -I$(MSGPACKDIR)/include
 
 #############################################################################
 # CLIENT/SERVER

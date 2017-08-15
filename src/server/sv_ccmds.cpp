@@ -84,7 +84,7 @@ static void SV_MapRestart_f(void)
     // check for maxclients change
     if (sv_maxclients->modified)
     {
-        char mapname[MAX_QPATH];
+        QPath mapname;
 
         Com_Printf("variable change -- restarting.\n");
         // restart the map the slow way

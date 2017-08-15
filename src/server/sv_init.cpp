@@ -531,7 +531,7 @@ Touch the cgame.qvm so that a pure client can load it if it's in a seperate pk3
 static void SV_TouchCGame(void)
 {
     fileHandle_t f;
-    char filename[MAX_QPATH];
+    QPath filename;
 
     Com_sprintf(filename, sizeof(filename), "vm/%s.qvm", "cgame");
     FS_FOpenFileRead(filename, &f, false);

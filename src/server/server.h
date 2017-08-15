@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 using Name = char[MAX_NAME_LENGTH];
 using Err = char[MAX_STRING_CHARS];
 using Guid = char[33];
+using QPath = char[MAX_QPATH];
 
 #include "admin.h"
 
@@ -165,9 +166,7 @@ struct client_t
     char lastClientCommandString[MAX_STRING_CHARS];
     sharedEntity_t *gentity;  // SV_GentityNum(clientnum)
 
-    // --extracted from userinfo
     Admin::Admin* admin;
-
     bool has_permission(Admin::Flags flags)
     {
         if ( admin )
@@ -177,11 +176,12 @@ struct client_t
         return false;
     }
 
-    Name name; // high bits masked
+    // --extracted from userinfo
+    Name name;
     Guid guid;
 
     // downloading
-    char downloadName[MAX_QPATH];  // if not empty string, we are downloading
+    QPath downloadName;  // if not empty string, we are downloading
     fileHandle_t download;  // file being downloaded
     int downloadSize;  // total bytes (can't use EOF because of paks)
     int downloadCount;  // bytes sent

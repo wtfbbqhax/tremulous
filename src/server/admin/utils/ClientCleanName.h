@@ -3,7 +3,7 @@ namespace Admin
     // FIXIT-H Find alternative or put somewhere nice 
     #define DECOLOR_OFF '\16'
     #define DECOLOR_ON  '\17'
-    static void DecolorString( char const * in, char * out, int len )
+    void DecolorString( char const * in, char * out, int len )
     {
         bool decolor = true;
 

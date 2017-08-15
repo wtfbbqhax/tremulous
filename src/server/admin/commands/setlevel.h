@@ -3,7 +3,7 @@ namespace Admin
     command_t setlevel 
     {
 
-        "setlevel", 
+        ".setlevel", 
         []( client_t *cl )
         {
             if ( Cmd_Argc() < 3 )
