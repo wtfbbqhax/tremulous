@@ -598,7 +598,7 @@ ifdef MINGW
 
   ifeq ($(ARCH),x86_64)
     OPTIMIZEVM = -O3
-    OPTIMIZE = $(OPTIMIZEVM) -ffast-math -mfpmath=sse2
+    OPTIMIZE = $(OPTIMIZEVM) -ffast-math -msse2
     HAVE_VM_COMPILED = true
     BASE_CFLAGS += -m64
   endif
@@ -1651,7 +1651,15 @@ $(Q3ASM): $(Q3ASMOBJ)
 # GRANGER
 #############################################################################
 
-GRANGER_CFLAGS += -fPIC -fpic
+ifeq ($(ARCH),x86_64)
+    ARCHFLAG=-m64
+else
+ifeq ($(ARCH),x86)
+    ARCHFLAG=-m32
+endif
+endif
+
+GRANGER_CFLAGS += $(ARCHFLAG) -fPIC -fpic
 
 ifeq ($(PLATFORM),darwin)
 GRANGER_CFLAGS += -DLUA_USE_MACOSX
@@ -1780,7 +1788,7 @@ TARGETS += $(B)/GPL $(B)/COPYING $(B)/CC
 #############################################################################
 
 #LUACFLAGS=-Wall -Wextra -fPIC -fpic
-LUACFLAGS= -fPIC -fpic
+LUACFLAGS= $(ARCHFLAG) -fPIC -fpic
 
 ifeq ($(PLATFORM),darwin)
 LUACFLAGS += -DLUA_USE_MACOSX
@@ -1875,7 +1883,7 @@ $(B)/script/rapidjson/%.o: $(LUA_RAPIDJSONDIR)/%.cpp
 # Nettle
 #############################################################################
 
-NETTLECFLAGS=-fPIC -fpic
+NETTLECFLAGS=$(ARCHFLAG) -fPIC -fpic
 
 define DO_NETTLE_CC
   $(echo_cmd) "NETTLE_CC $<"
