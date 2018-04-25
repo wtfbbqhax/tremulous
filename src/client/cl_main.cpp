@@ -3552,7 +3552,7 @@ static void CL_ServerInfoPacket(netadr_t from, msg_t *msg)
 {
     int i, type;
     char info[MAX_INFO_STRING];
-    char *infoString;
+    const char *infoString;
     int prot;
     const char *gamename;
     bool gameMismatch;
@@ -3776,7 +3776,7 @@ static void CL_ConnectionlessPacket(netadr_t from, msg_t *msg)
 
     const char *s = MSG_ReadStringLine(msg);
 
-    Cmd_TokenizeString(s);
+    Cmd_TokenizeString2(s, false);
 
     const char *c = Cmd_Argv(0);
 

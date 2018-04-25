@@ -42,8 +42,10 @@ void MSG_WriteShort(msg_t *sb, int c);
 void MSG_WriteLong(msg_t *sb, int c);
 void MSG_WriteFloat(msg_t *sb, float f);
 void MSG_WriteString(msg_t *sb, const char *s);
+void MSG_WriteString2(msg_t *sb, const char *s, int maxsize);
 void MSG_WriteBigString(msg_t *sb, const char *s);
 void MSG_WriteAngle16(msg_t *sb, float f);
+
 int MSG_HashKey(int alternateProtocol, const char *string, int maxlen);
 
 void MSG_BeginReading(msg_t *sb);
@@ -56,9 +58,9 @@ int MSG_ReadByte(msg_t *sb);
 int MSG_ReadShort(msg_t *sb);
 int MSG_ReadLong(msg_t *sb);
 float MSG_ReadFloat(msg_t *sb);
-char *MSG_ReadString(msg_t *sb);
-char *MSG_ReadBigString(msg_t *sb);
-char *MSG_ReadStringLine(msg_t *sb);
+const char *MSG_ReadString(msg_t *sb);
+const char *MSG_ReadBigString(msg_t *sb);
+const char *MSG_ReadStringLine(msg_t *sb);
 float MSG_ReadAngle16(msg_t *sb);
 void MSG_ReadData(msg_t *sb, void *buffer, int size);
 int MSG_LookaheadByte(msg_t *msg);
