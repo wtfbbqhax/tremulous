@@ -15,6 +15,7 @@ COM_Parse: COM_Parse.cpp ../q_shared.cpp ../q_shared.h
 check: msg CmdParser
 	./msg
 	./CmdParser
+	./COM_Parse
 
 clean:
 	rm -rf COM_Parse
