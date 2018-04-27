@@ -310,7 +310,9 @@ SV_GameSystemCalls
 The module is making a system call
 ====================
 */
-intptr_t SV_GameSystemCalls( intptr_t *args ) {
+#define	VMA(x) sv.gvm->ArgPtr(args[x])
+intptr_t SV_GameSystemCalls( intptr_t *args )
+{
     switch( args[0] )
     {
         case G_PRINT:
@@ -525,9 +527,9 @@ void SV_ShutdownGameProgs( void ) {
 
     Lua_Delete();
 
-	VM_Call( sv.gvm, GAME_SHUTDOWN, false );
-	VM_Free( sv.gvm );
-	sv.gvm = NULL;
+	sv.gvm->Call(GAME_SHUTDOWN, false);
+	delete sv.gvm;
+	sv.gvm = nullptr;
 }
 
 /*
@@ -553,7 +555,7 @@ static void SV_InitGameVM( bool restart )
 
 	// use the current msec count for a random seed
 	// init for this gamestate
-	VM_Call( sv.gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart );
+	sv.gvm->Call(GAME_INIT, sv.time, Com_Milliseconds(), restart);
 }
 
 /*
@@ -567,13 +569,14 @@ void SV_RestartGameProgs( void ) {
 	if ( !sv.gvm ) {
 		return;
 	}
-	VM_Call( sv.gvm, GAME_SHUTDOWN, true );
+	sv.gvm->Call(GAME_SHUTDOWN, true);
 
 	// do a restart instead of a free
-	sv.gvm = VM_Restart(sv.gvm, true);
-	if ( !sv.gvm ) {
-		Com_Error( ERR_FATAL, "VM_Restart on game failed" );
-	}
+	//sv.gvm = VM_Restart(sv.gvm, true);
+	//if ( !sv.gvm ) Com_Error( ERR_FATAL, "VM_Restart on game failed" );
+    delete sv.gvm;
+    VMType interpret = (VMType)Cvar_VariableValue("vm_game");
+    sv.gvm = VMFactory::createVM(interpret, "game", SV_GameSystemCalls);
 
 	SV_InitGameVM( true );
 }
@@ -588,13 +591,9 @@ Called on a normal map change, not on a map_restart
 */
 void SV_InitGameProgs( void )
 {
-	// load the dll or bytecode
-	sv.gvm = VM_Create( "game", SV_GameSystemCalls, (vmInterpret_t)Cvar_VariableValue( "vm_game" ) );
-	if ( !sv.gvm ) {
-		Com_Error( ERR_FATAL, "VM_Create on game failed" );
-	}
-
-	SV_InitGameVM( false );
+    VMType interpret = (VMType)Cvar_VariableValue("vm_game");
+    sv.gvm = VMFactory::createVM(interpret, "game", SV_GameSystemCalls);
+    SV_InitGameVM( false );
 }
 
 
@@ -610,5 +609,5 @@ bool SV_GameCommand( void ) {
 		return false;
 	}
 
-	return (bool)VM_Call( sv.gvm, GAME_CONSOLE_COMMAND );
+	return (bool)sv.gvm->Call(GAME_CONSOLE_COMMAND);
 }

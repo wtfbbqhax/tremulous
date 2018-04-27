@@ -376,9 +376,9 @@ void CL_ShutdownCGame( void ) {
 	if ( !cls.cgame ) {
 		return;
 	}
-	VM_Call( cls.cgame, CG_SHUTDOWN );
-	VM_Free( cls.cgame );
-	cls.cgame = NULL;
+	cls.cgame->Call( CG_SHUTDOWN );
+	delete cls.cgame;
+	cls.cgame = nullptr;
 }
 
 static int	FloatAsInt( float f ) {
@@ -396,6 +396,7 @@ CL_CgameSystemCalls
 The cgame module is making a system call
 ====================
 */
+#define VMA(x) cls.ui->ArgPtr(args[x])
 intptr_t CL_CgameSystemCalls( intptr_t *args )
 {
 	if( cls.cgInterface == 2 && args[0] >= CG_R_SETCLIPREGION && args[0] < CG_MEMSET )
@@ -773,7 +774,6 @@ void CL_InitCGame( void ) {
 	const char			*mapname;
 	int					t1, t2;
 	char				backup[ MAX_STRING_CHARS ];
-	vmInterpret_t		interpret;
 
 	t1 = Sys_Milliseconds();
 
@@ -783,7 +783,7 @@ void CL_InitCGame( void ) {
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
 	// load the dll or bytecode
-	interpret = (vmInterpret_t)Cvar_VariableValue("vm_cgame");
+	VMType interpret = (VMType)Cvar_VariableValue("vm_cgame");
 	if(cl_connectedToPureServer)
 	{
 		// if sv_pure is set we only allow qvms to be loaded
@@ -791,10 +791,12 @@ void CL_InitCGame( void ) {
 			interpret = VMI_COMPILED;
 	}
 
-	cls.cgame = VM_Create( "cgame", CL_CgameSystemCalls, interpret );
-	if ( !cls.cgame ) {
+	cls.cgame = VMFactory::createVM(interpret, "cgame", CL_CgameSystemCalls);
+	if ( !cls.cgame )
+    {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
+
 	clc.state = CA_LOADING;
 
 	Cvar_VariableStringBuffer( "cl_voipSendTarget", backup, sizeof( backup ) );
@@ -803,7 +805,7 @@ void CL_InitCGame( void ) {
     // Probe 1.1 or gpp cgame
 	cls.cgInterface = 0;
 	probingCG = true;
-    VM_Call( cls.cgame, CG_VOIP_STRING );
+    cls.cgame->Call( CG_VOIP_STRING );
 	probingCG = false;
 
 	Cvar_Set( "cl_voipSendTarget", backup );
@@ -818,7 +820,7 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	VM_Call( cls.cgame, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	cls.cgame->Call( CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )
@@ -860,7 +862,7 @@ bool CL_GameCommand( void )
 	if ( !cls.cgame )
 		return false;
 
-	return (bool)VM_Call( cls.cgame, CG_CONSOLE_COMMAND );
+	return (bool)cls.cgame->Call( CG_CONSOLE_COMMAND );
 }
 
 /*
@@ -873,7 +875,7 @@ void CL_GameConsoleText( void )
 	if ( !cls.cgame )
 		return;
 
-	VM_Call( cls.cgame, CG_CONSOLE_TEXT );
+	cls.cgame->Call( CG_CONSOLE_TEXT );
 }
 
 /*
@@ -883,7 +885,7 @@ CL_CGameRendering
 */
 void CL_CGameRendering( stereoFrame_t stereo )
 {
-	VM_Call( cls.cgame, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+	cls.cgame->Call( CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 	VM_Debug( 0 );
 }
 

@@ -110,7 +110,7 @@ struct server_t {
     int restartTime;
     int time;
 
-    vm_t *gvm;  // game virtual machine
+    VM *gvm;  // game virtual machine
 };
 
 struct clientSnapshot_t {
