@@ -1660,7 +1660,7 @@ int CIN_PlayCinematic(const char *arg, int x, int y, int w, int h, int systemBit
         // close the menu
         if (cls.ui)
         {
-            VM_Call(cls.ui, UI_SET_ACTIVE_MENU - cls.uiInterface == 2 ? 2 : 0, UIMENU_NONE);
+            cls.ui->Call(UI_SET_ACTIVE_MENU - cls.uiInterface == 2 ? 2 : 0, UIMENU_NONE);
         }
     }
     else
