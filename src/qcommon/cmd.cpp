@@ -416,14 +416,22 @@ void Cmd_Echo_f(void) { Com_Printf("%s\n", Cmd_Args()); }
 Cmd_SaveCmdContext
 ============
 */
-void Cmd_SaveCmdContext(void) { ::memcpy(&savedCmd, &cmd, sizeof(cmdContext_t)); }
+void Cmd_SaveCmdContext(void)
+{
+    ::memcpy(&savedCmd, &cmd, sizeof(cmdContext_t));
+    parser.SaveArgs();
+}
 
 /*
 ============
 Cmd_RestoreCmdContext
 ============
 */
-void Cmd_RestoreCmdContext(void) { ::memcpy(&cmd, &savedCmd, sizeof(cmdContext_t)); }
+void Cmd_RestoreCmdContext(void)
+{
+    ::memcpy(&cmd, &savedCmd, sizeof(cmdContext_t));
+    parser.RestoreArgs();
+}
 
 /*
 ============
@@ -453,7 +461,10 @@ The interpreted versions use this because
 they can't have pointers returned to them
 ============
 */
-void Cmd_ArgvBuffer(int arg, char *buffer, int bufferLength) { Q_strncpyz(buffer, Cmd_Argv(arg), bufferLength); }
+void Cmd_ArgvBuffer(int arg, char *buffer, int bufferLength)
+{
+    Q_strncpyz(buffer, Cmd_Argv(arg), bufferLength);
+}
 
 /*
 ============

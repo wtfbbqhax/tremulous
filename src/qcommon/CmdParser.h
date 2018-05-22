@@ -27,7 +27,11 @@ using Args = std::vector<std::string>;
 
 struct Parser {
 
+    Args saved_args;
     Args args;
+
+    void SaveArgs() { saved_args = args; }
+    void RestoreArgs() { args = saved_args; }
 
     Args& Parse(std::string src)
     {
