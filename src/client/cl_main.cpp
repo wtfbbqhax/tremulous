@@ -1586,7 +1586,7 @@ CL_Connect_f
 */
 void CL_Connect_f(void)
 {
-    const char *server;
+    char server[MAX_OSPATH];
     int alternateProtocol;
     const char *serverString;
     int argc = Cmd_Argc();
@@ -1599,26 +1599,28 @@ void CL_Connect_f(void)
     }
 
     alternateProtocol = 0;
-    if (argc == 2)
+    if (argc > 2)
     {
-    }
-    else if (!strcmp(Cmd_Argv(argc - 1), "-g"))
-    {
-        alternateProtocol = 1;
-        --argc;
-    }
-    else if (!strcmp(Cmd_Argv(argc - 1), "-1"))
-    {
-        alternateProtocol = 2;
-        --argc;
-    }
-    else if (argc == 4)
-    {
-        --argc;
+        if (!strcmp(Cmd_Argv(argc - 1), "-g"))
+        {
+            alternateProtocol = 1;
+            --argc;
+        }
+        else if (!strcmp(Cmd_Argv(argc - 1), "-1"))
+        {
+            alternateProtocol = 2;
+            --argc;
+        }
+        else if (argc == 4)
+        {
+            --argc;
+        }
     }
 
     if (argc == 2)
-        server = Cmd_Argv(1);
+    {
+        Q_strncpyz(server, Cmd_Argv(1), sizeof(server));
+    }
     else
     {
         if (!strcmp(Cmd_Argv(1), "-4"))
@@ -1628,7 +1630,7 @@ void CL_Connect_f(void)
         else
             Com_Printf("warning: only -4 or -6 as address type understood.\n");
 
-        server = Cmd_Argv(2);
+        Q_strncpyz(server, Cmd_Argv(2), sizeof(server));
     }
 
     // save arguments for reconnect
@@ -4206,7 +4208,7 @@ static void CL_GlobalServers_f(void)
 
             for ( int i = 1; i <= MAX_MASTER_SERVERS; i++ )
             {
-                sprintf(command, "sv_master%d", i);
+                Com_sprintf(command, sizeof(command), "sv_master%d", i);
                 masteraddress = Cvar_VariableString(command);
 
                 if(!*masteraddress)
@@ -4224,7 +4226,8 @@ static void CL_GlobalServers_f(void)
             return;
         }
 
-        sprintf(command, "sv_%smaster%d", (a == 0 ? "" : a == 1 ? "alt1" : "alt2"), masterNum);
+        Com_sprintf(command, sizeof(command), "sv_%smaster%d",
+                (a == 0 ? "" : a == 1 ? "alt1" : "alt2"), masterNum);
         masteraddress = Cvar_VariableString(command);
 
         if (!*masteraddress)
@@ -4267,10 +4270,10 @@ static void CL_GlobalServers_f(void)
         {
             Q_strcat(command, sizeof(command), " ");
             Q_strcat(command, sizeof(command), Cmd_Argv(i));
+            Com_DPrintf(S_COLOR_GREEN "%s: command: %s\n", __func__, command);
         }
 
         NET_OutOfBandPrint(NS_SERVER, to, "%s", command);
-        // outdent
     }
     CL_RequestMotd();
 }
